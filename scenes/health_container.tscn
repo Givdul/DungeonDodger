@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://dxpxtsjjrdh8"]
+
+[ext_resource type="Texture2D" uid="uid://drorpnil2dnan" path="res://assets/sprites/Props_Items_(animated)/health_potion_item.png" id="1_32fl3"]
+[ext_resource type="Script" path="res://scripts/health_container.gd" id="1_lp0ud"]
+
+[node name="HealthContainer" type="Node2D"]
+scale = Vector2(1.4, 1.4)
+script = ExtResource("1_lp0ud")
+
+[node name="Heart1" type="Sprite2D" parent="."]
+texture = ExtResource("1_32fl3")
+
+[node name="Heart2" type="Sprite2D" parent="."]
+position = Vector2(10, 0)
+texture = ExtResource("1_32fl3")
+
+[node name="Heart3" type="Sprite2D" parent="."]
+position = Vector2(20, 0)
+texture = ExtResource("1_32fl3")
