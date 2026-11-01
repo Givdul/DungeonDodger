@@ -7,7 +7,7 @@ extends Area2D
 @onready var anim = $AnimatedSprite2D
 @onready var timer = $Timer
 
-# Reference your game node to get camera and padding info
+# Reference your game node to get the playable area
 @onready var game = get_tree().get_first_node_in_group("Game")  # Add group "Game" to your main game Node2D
 
 var state = "locking"
@@ -55,23 +55,10 @@ func _move_rush(delta):
 	# Calculate new position
 	var new_pos = position + rush_direction * speed * delta
 	
-	# Get camera bounds and padding from game script
-	if game:
-		var cam_pos = game.camera.global_position
-		var viewport_rect = game.get_viewport_rect()
-		var half_screen = Vector2(viewport_rect.size.x, viewport_rect.size.y) * 0.5 / game.camera.zoom
-
-		# Calculate padded bounds like in game script
-		var left_bound = cam_pos.x - half_screen.x + game.padding_left
-		var right_bound = cam_pos.x + half_screen.x - game.padding_right
-		var top_bound = cam_pos.y - half_screen.y + game.padding_top
-		var bottom_bound = cam_pos.y + half_screen.y - game.padding_bottom
-
-		if new_pos.x < left_bound or new_pos.x > right_bound \
-		or new_pos.y < top_bound or new_pos.y > bottom_bound:
-			state = "locking"
-			timer.start()
-			return
+	if game and not game.playable_area().has_point(new_pos):
+		state = "locking"
+		timer.start()
+		return
 
 
 	position = new_pos

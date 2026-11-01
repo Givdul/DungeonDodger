@@ -4,8 +4,13 @@ signal restart_requested
 
 enum State { START, PLAYING, PAUSED, GAME_OVER }
 
+# Root lays the UI out at a quarter of the viewport's size and draws it 4x.
+const UI_SCALE := 4.0
+
 var state := State.START
 
+@onready var root: Control = $Root
+@onready var hud_area: Control = %HudArea
 @onready var pause_button: Button = %PauseButton
 @onready var mute_button: Button = %MuteButton
 @onready var dim: ColorRect = %Dim
@@ -15,6 +20,8 @@ var state := State.START
 
 
 func _ready() -> void:
+	get_viewport().size_changed.connect(_fit_to_screen)
+	_fit_to_screen()
 	%PlayButton.pressed.connect(start_playing)
 	%ResumeButton.pressed.connect(start_playing)
 	%RestartButton.pressed.connect(restart_requested.emit)
@@ -22,6 +29,34 @@ func _ready() -> void:
 	mute_button.pressed.connect(Settings.toggle_mute)
 	Settings.muted_changed.connect(_show_muted)
 	_show_muted(Settings.muted)
+
+
+func _fit_to_screen() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	root.size = viewport_size / UI_SCALE
+	# Keep the HUD level with the hearts and score, which are drawn in the room,
+	# and out of the notch and home indicator.
+	var hud := _room_on_screen(viewport_size).intersection(_safe_area_in_viewport())
+	hud_area.offset_left = hud.position.x / UI_SCALE
+	hud_area.offset_top = hud.position.y / UI_SCALE
+	hud_area.offset_right = (hud.end.x - viewport_size.x) / UI_SCALE
+	hud_area.offset_bottom = (hud.end.y - viewport_size.y) / UI_SCALE
+
+
+# The camera frames the room to exactly the design viewport; taller screens add wall above and below.
+func _room_on_screen(viewport_size: Vector2) -> Rect2:
+	var design_size := Vector2(
+		ProjectSettings.get_setting("display/window/size/viewport_width"),
+		ProjectSettings.get_setting("display/window/size/viewport_height"))
+	return Rect2((viewport_size - design_size) / 2, design_size)
+
+
+# DisplayServer reports the safe area in screen pixels; map it into viewport units.
+func _safe_area_in_viewport() -> Rect2:
+	var window := Rect2(DisplayServer.window_get_position(), DisplayServer.window_get_size())
+	var safe := Rect2(DisplayServer.get_display_safe_area()).intersection(window)
+	safe.position -= window.position
+	return get_viewport().get_screen_transform().affine_inverse() * safe
 
 
 func _notification(what: int) -> void:

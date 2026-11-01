@@ -4,7 +4,6 @@ extends Node2D
 @export var phantom_scene: PackedScene
 @export var bat_scene: PackedScene
 @onready var player = $Player
-@onready var camera = $Camera2D
 @export var debug := false
 @export var tilemap: TileMap  # Drag your TileMap node into this slot in the editor
 @onready var score_label = $ScoreLabel
@@ -20,10 +19,13 @@ var current_point = null
 @export var SAFE_DISTANCE_ENEMY := 100  # Minimum distance from player (pixels)
 var point_count := 0
 
-@export var padding_top := 30
-@export var padding_bottom := 12
-@export var padding_left := 5
-@export var padding_right := 5
+# Inset from the room's walls (the Bounds bodies) where points and enemies may spawn.
+@export var padding_top := 9
+@export var padding_bottom := 0
+@export var padding_left := 6
+@export var padding_right := 6
+
+@onready var room := _room_rect()
 
 func _ready():
 	if debug and tilemap:
@@ -60,22 +62,8 @@ func _draw():
 	if not debug:
 		return
 
-	var viewport_rect = get_viewport_rect()
-	var cam_pos = camera.global_position
-	var half_screen = Vector2(viewport_rect.size.x, viewport_rect.size.y) * 0.5 / camera.zoom
-
-	# Existing debug rectangles
-	var rect_min = cam_pos - half_screen
-	var rect_max = cam_pos + half_screen
-	var full_rect = Rect2(rect_min, rect_max - rect_min)
-
-	var padded_min = rect_min + Vector2(padding_left, padding_top)
-	var padded_max = rect_max - Vector2(padding_right, padding_bottom)
-	var padded_rect = Rect2(padded_min, padded_max - padded_min)
-
-	# Draw existing debug rects
-	draw_rect(full_rect, Color(1, 0, 0, 0.3), false, 3)
-	draw_rect(padded_rect, Color(0, 1, 0, 0.3), false, 3)
+	draw_rect(room, Color(1, 0, 0, 0.3), false, 3)
+	draw_rect(playable_area(), Color(0, 1, 0, 0.3), false, 3)
 
 	# Draw safe distance circles
 	# Enemy circle (blue, larger, behind)
@@ -102,20 +90,20 @@ func spawn_point():
 	current_point.connect("picked_up", Callable(self, "_on_point_picked_up"), CONNECT_DEFERRED)
 
 
+func _room_rect() -> Rect2:
+	var top_left := Vector2($Bounds/LeftWourldBound.position.x, $Bounds/TopWorldBound.position.y)
+	var bottom_right := Vector2($Bounds/RightWorldBound.position.x, $Bounds/BottomWorldBound.position.y)
+	return Rect2(top_left, bottom_right - top_left)
+
+
+func playable_area() -> Rect2:
+	return room.grow_individual(-padding_left, -padding_top, -padding_right, -padding_bottom)
+
+
 func get_random_point_away_from_player(distance) -> Vector2:
-	var viewport_rect = get_viewport_rect()
-	var cam_pos = camera.global_position
-	var half_screen = Vector2(viewport_rect.size.x, viewport_rect.size.y) * 0.5 / camera.zoom
-
-	# Calculate camera visible rect in world coords
-	var rect_min = cam_pos - half_screen
-	var rect_max = cam_pos + half_screen
-
-	# Apply padding
-	rect_min.x += padding_left
-	rect_max.x -= padding_right
-	rect_min.y += padding_top      # exclude top part
-	rect_max.y -= padding_bottom   # exclude bottom part
+	var area := playable_area()
+	var rect_min := area.position
+	var rect_max := area.end
 
 	# Try to find a spawn pos away from player
 	for i in range(999):
@@ -127,10 +115,7 @@ func get_random_point_away_from_player(distance) -> Vector2:
 			return spawn_pos
 
 	# fallback position if none found after attempts
-	return Vector2(
-		clamp(cam_pos.x, rect_min.x, rect_max.x),
-		clamp(cam_pos.y, rect_min.y, rect_max.y)
-	)
+	return area.get_center()
 
 func _on_point_picked_up():			
 	point_count += 1
