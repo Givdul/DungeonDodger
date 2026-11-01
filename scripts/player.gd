@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 signal lives_changed(lives)
+signal died
 
 @onready var anim = $AnimatedSprite2D
 @onready var audio_stream_player_2d = $hit_sound
@@ -109,3 +110,4 @@ func die():
 	set_process(false)
 	collision_layer = 0
 	collision_mask = 0
+	died.emit()

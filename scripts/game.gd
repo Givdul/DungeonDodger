@@ -9,6 +9,10 @@ extends Node2D
 @export var tilemap: TileMap  # Drag your TileMap node into this slot in the editor
 @onready var score_label = $ScoreLabel
 @onready var high_score_var_label = $HighScoreVarLabel
+@onready var ui = $UI
+
+# Static so it survives reload_current_scene(): a restart skips the start screen.
+static var _restarting := false
 
 
 var current_point = null
@@ -28,14 +32,28 @@ func _ready():
 	high_score_var_label.text = str(ScoreManager.high_score)
 	spawn_point()
 
+	player.died.connect(_on_player_died)
+	ui.restart_requested.connect(_restart)
+	if _restarting:
+		_restarting = false
+		ui.start_playing()
+	else:
+		ui.show_start(ScoreManager.high_score)
+
 func _process(_delta):
 	if debug:
 		queue_redraw()
 
-	if(player.is_dead):
-		if point_count > ScoreManager.high_score:
-			ScoreManager.high_score = point_count
-			ScoreManager.save_high_score()
+func _on_player_died():
+	var is_new_best := point_count > ScoreManager.high_score
+	if is_new_best:
+		ScoreManager.high_score = point_count
+		ScoreManager.save_high_score()
+	ui.show_game_over(point_count, ScoreManager.high_score, is_new_best)
+
+func _restart():
+	_restarting = true
+	get_tree().reload_current_scene()
 
 
 func _draw():
@@ -80,7 +98,8 @@ func spawn_point():
 	if sprite:
 		sprite.z_index = 1
 
-	current_point.connect("picked_up", Callable(self, "_on_point_picked_up"))
+	# Deferred: picked_up fires inside a physics callback, where spawning new bodies is refused.
+	current_point.connect("picked_up", Callable(self, "_on_point_picked_up"), CONNECT_DEFERRED)
 
 
 func get_random_point_away_from_player(distance) -> Vector2:

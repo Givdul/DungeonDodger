@@ -13,7 +13,7 @@ func _on_body_entered(body):
 		picked_up_already = true  # Prevent retriggering
 
 		emit_signal("picked_up")
-		$CollisionShape2D.disabled = true  # Disable collision to be extra safe
+		$CollisionShape2D.set_deferred("disabled", true)  # Disable collision to be extra safe
 		anim.play("picked_up")
 		audio_stream_player.play()
 		await anim.animation_finished
