@@ -98,7 +98,8 @@ func spawn_point():
 	if sprite:
 		sprite.z_index = 1
 
-	current_point.connect("picked_up", Callable(self, "_on_point_picked_up"))
+	# Deferred: picked_up fires inside a physics callback, where spawning new bodies is refused.
+	current_point.connect("picked_up", Callable(self, "_on_point_picked_up"), CONNECT_DEFERRED)
 
 
 func get_random_point_away_from_player(distance) -> Vector2:
