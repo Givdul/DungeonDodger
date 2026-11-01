@@ -1,9 +1,8 @@
 extends Node
 # Script name: mobile_inputs.gd
 
-var swipe_start: Vector2     = Vector2.ZERO
-var minimum_drag: int        = 50
-var swipe_direction: Vector2 = Vector2.ZERO
+var swipe_start: Vector2 = Vector2.ZERO
+var minimum_drag: int    = 50
 
 func _input(event):
 	if event is InputEventScreenTouch:
@@ -12,26 +11,19 @@ func _input(event):
 		else:
 			_calculate_swipe(event.position)
 
-func _calculate_swipe(swipe_end) -> void:
-	swipe_direction = swipe_end - swipe_start
+func _calculate_swipe(swipe_end: Vector2) -> void:
+	var swipe := swipe_end - swipe_start
 
-	if swipe_direction.length() < minimum_drag:
+	if swipe.length() < minimum_drag:
 		return
 
-	swipe_direction = swipe_direction.normalized()
-
-	# Determine swipe direction
-	if abs(swipe_direction.x) > abs(swipe_direction.y):
-		if swipe_direction.x > 0:
-			Input.action_press("ui_right")
-			Input.action_release("ui_right")
-		else:
-			Input.action_press("ui_left")
-			Input.action_release("ui_left")
+	var action: StringName
+	if abs(swipe.x) > abs(swipe.y):
+		action = &"move_right" if swipe.x > 0 else &"move_left"
 	else:
-		if swipe_direction.y > 0:
-			Input.action_press("ui_down")
-			Input.action_release("ui_down")
-		else:
-			Input.action_press("ui_up")
-			Input.action_release("ui_up")
+		action = &"move_down" if swipe.y > 0 else &"move_up"
+
+	# player.gd reads these with is_action_just_pressed, which still fires when
+	# the press and release land in the same frame.
+	Input.action_press(action)
+	Input.action_release(action)
