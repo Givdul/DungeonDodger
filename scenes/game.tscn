@@ -426,10 +426,10 @@ position = Vector2(59, 0)
 z_index = 98
 shape = SubResource("WorldBoundaryShape2D_r1kre")
 
-[node name="LeftWourldBound" type="StaticBody2D" parent="Bounds"]
+[node name="LeftWorldBound" type="StaticBody2D" parent="Bounds"]
 position = Vector2(-59, 0)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/LeftWourldBound"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bounds/LeftWorldBound"]
 z_index = 98
 shape = SubResource("WorldBoundaryShape2D_euq26")
 
