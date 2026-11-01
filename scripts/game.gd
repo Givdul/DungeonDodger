@@ -159,7 +159,7 @@ func _add_floor_rows(above: int, below: int) -> void:
 
 
 func _room_rect() -> Rect2:
-	var top_left := Vector2($Bounds/LeftWourldBound.position.x, $Bounds/TopWorldBound.position.y)
+	var top_left := Vector2($Bounds/LeftWorldBound.position.x, $Bounds/TopWorldBound.position.y)
 	var bottom_right := Vector2($Bounds/RightWorldBound.position.x, $Bounds/BottomWorldBound.position.y)
 	return Rect2(top_left, bottom_right - top_left)
 

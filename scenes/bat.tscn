@@ -159,6 +159,3 @@ autoplay = "idle_right"
 shape = SubResource("CircleShape2D_cu7v1")
 
 [node name="Timer" type="Timer" parent="."]
-
-[connection signal="body_entered" from="." to="." method="_on_body_entered"]
-[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

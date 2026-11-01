@@ -17,7 +17,6 @@ func _ready():
 	timer.wait_time = lock_time
 	timer.connect("timeout", Callable(self, "_on_lock_timeout"))
 	timer.start()
-	connect("body_entered", Callable(self, "_on_body_entered"))
 
 func _physics_process(delta):
 	if not is_instance_valid(player):
@@ -28,6 +27,11 @@ func _physics_process(delta):
 
 	if not player or not player.is_inside_tree():
 		return
+
+	# Polled rather than body_entered: contact that starts during the player's hit
+	# animation never enters again, so a resting enemy would stop hurting.
+	if overlaps_body(player):
+		player.take_damage()
 
 	match state:
 		"locking":
@@ -62,9 +66,3 @@ func _move_rush(delta):
 
 
 	position = new_pos
-
-func _on_body_entered(body):
-	if body.is_in_group("Player"):
-		if body.has_method("take_damage"):
-			body.take_damage()
-

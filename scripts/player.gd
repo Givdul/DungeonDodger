@@ -14,8 +14,11 @@ var direction := Vector2.ZERO
 var last_direction := Vector2.DOWN  # Default facing down
 
 const SPEED := 130
+# Enemies deal damage on every frame of contact, so this is what spaces hits apart.
+const INVULNERABLE_SECONDS := 1.0
 var is_dead := false
 var is_hit := false  # Flag to know if hit anim is playing
+var is_invulnerable := false
 
 func _physics_process(_delta):
 	if is_dead:
@@ -53,10 +56,12 @@ func _ready():
 	emit_signal("lives_changed", current_lives)
 
 func take_damage():
-	if current_lives <= 0 or is_hit or is_dead:
+	if current_lives <= 0 or is_invulnerable or is_dead:
 		return
 	
 	current_lives -= 1
+	is_invulnerable = true
+	get_tree().create_timer(INVULNERABLE_SECONDS, false).timeout.connect(func(): is_invulnerable = false)
 	emit_signal("lives_changed", current_lives)
 	
 	if current_lives <= 0:
@@ -83,22 +88,18 @@ func take_damage():
 	# Wait for hit animation to finish before resuming normal state
 	await anim.animation_finished
 	is_hit = false
-	
-	if current_lives <= 0:
-		die()
+
+	# Resume last movement animation or idle
+	if direction == Vector2.UP:
+		anim.play("run_up")
+	elif direction == Vector2.DOWN:
+		anim.play("run_down")
+	elif direction == Vector2.LEFT:
+		anim.play("run_left")
+	elif direction == Vector2.RIGHT:
+		anim.play("run_right")
 	else:
-		# Resume last movement animation or idle
-		if direction == Vector2.ZERO:
-			anim.play("idle_down")  # or whichever idle you want as default
-		else:
-			if direction == Vector2.UP:
-				anim.play("run_up")
-			elif direction == Vector2.DOWN:
-				anim.play("run_down")
-			elif direction == Vector2.LEFT:
-				anim.play("run_left")
-			elif direction == Vector2.RIGHT:
-				anim.play("run_right")
+		anim.play("idle")
 
 func die():
 	is_dead = true

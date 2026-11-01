@@ -6,9 +6,6 @@ extends CharacterBody2D
 
 var last_facing_right := true  # Track direction for idle animation
 
-func _ready():
-	$HitArea.connect("body_entered", Callable(self, "_on_body_entered"))
-
 func _physics_process(delta):
 	if not is_instance_valid(player):
 		player = null
@@ -17,10 +14,15 @@ func _physics_process(delta):
 		return
 	
 	if player and player.is_inside_tree():
-		if player.has_method("is_dead") and player.is_dead:
+		if player.is_dead:
 			velocity = Vector2.ZERO
 			anim.play("idle_right" if last_facing_right else "idle_left")
 			return
+
+		# Polled rather than body_entered: contact that starts during the player's hit
+		# animation never enters again, so a resting enemy would stop hurting.
+		if $HitArea.overlaps_body(player):
+			player.take_damage()
 
 		var direction = (player.global_position - global_position).normalized()
 		velocity = direction * speed
@@ -32,7 +34,3 @@ func _physics_process(delta):
 		else:
 			anim.play("run_left")
 			last_facing_right = false
-
-func _on_body_entered(body):
-	if body.is_in_group("Player") and body.has_method("take_damage"):
-		body.take_damage()
