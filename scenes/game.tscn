@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://dxpxtsjjrdh8" path="res://scenes/health_container.tscn" id="8_vqtvi"]
 [ext_resource type="Texture2D" uid="uid://drorpnil2dnan" path="res://assets/sprites/Props_Items_(animated)/health_potion_item.png" id="9_nd486"]
 [ext_resource type="AudioStream" uid="uid://c24jmoucctq" path="res://assets/sounds/Patreon Challenge 12.ogg" id="10_x555p"]
-[ext_resource type="Script" path="res://scripts/backgroundMusic.gd" id="11_suflu"]
+[ext_resource type="PackedScene" uid="uid://dgub8krvw6wyd" path="res://scenes/game_ui.tscn" id="12_ui"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_yhchq"]
 
@@ -454,6 +454,8 @@ position = Vector2(-38, -97)
 full_icon = ExtResource("9_nd486")
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+process_mode = 3
 stream = ExtResource("10_x555p")
 autoplay = true
-script = ExtResource("11_suflu")
+
+[node name="UI" parent="." instance=ExtResource("12_ui")]

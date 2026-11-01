@@ -1,0 +1,242 @@
+[gd_scene format=3 uid="uid://dgub8krvw6wyd"]
+
+[ext_resource type="Script" uid="uid://c3eh24ehywxt6" path="res://scripts/game_ui.gd" id="1_ui"]
+[ext_resource type="FontFile" uid="uid://cfgitiypbcwvg" path="res://assets/fonts/PixelOperator8-Bold.ttf" id="2_font"]
+[ext_resource type="Texture2D" uid="uid://djn8o1nxjx338" path="res://assets/sprites/Hud_Ui/item_box_hud.png" id="3_box"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_normal"]
+content_margin_left = 4.0
+content_margin_top = 3.0
+content_margin_right = 4.0
+content_margin_bottom = 3.0
+texture = ExtResource("3_box")
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pressed"]
+content_margin_left = 4.0
+content_margin_top = 3.0
+content_margin_right = 4.0
+content_margin_bottom = 3.0
+texture = ExtResource("3_box")
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+modulate_color = Color(0.7, 0.7, 0.7, 1)
+
+[sub_resource type="Theme" id="Theme_ui"]
+default_font = ExtResource("2_font")
+default_font_size = 8
+Button/colors/font_color = Color(0.2, 0.2, 0.2, 1)
+Button/colors/font_focus_color = Color(0.2, 0.2, 0.2, 1)
+Button/colors/font_hover_color = Color(0.2, 0.2, 0.2, 1)
+Button/colors/font_hover_pressed_color = Color(0.2, 0.2, 0.2, 1)
+Button/colors/font_pressed_color = Color(0.2, 0.2, 0.2, 1)
+Button/styles/focus = SubResource("StyleBoxEmpty_focus")
+Button/styles/hover = SubResource("StyleBoxTexture_normal")
+Button/styles/normal = SubResource("StyleBoxTexture_normal")
+Button/styles/pressed = SubResource("StyleBoxTexture_pressed")
+Label/colors/font_color = Color(1, 1, 1, 1)
+
+[node name="UI" type="CanvasLayer" unique_id=1692889909]
+process_mode = 3
+layer = 10
+script = ExtResource("1_ui")
+
+[node name="Root" type="Control" parent="." unique_id=521248169]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 180.0
+offset_bottom = 320.0
+scale = Vector2(4, 4)
+mouse_filter = 2
+theme = SubResource("Theme_ui")
+
+[node name="PauseButton" type="Button" parent="Root" unique_id=896366197]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -20.0
+offset_top = 12.0
+offset_right = -2.0
+offset_bottom = 28.0
+grow_horizontal = 0
+focus_mode = 0
+text = "II"
+
+[node name="Dim" type="ColorRect" parent="Root" unique_id=205359724]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="StartScreen" type="Control" parent="Root" unique_id=1214554828]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlayButton" type="Button" parent="Root/StartScreen" unique_id=753055459]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+flat = true
+
+[node name="Content" type="VBoxContainer" parent="Root/StartScreen" unique_id=1569685521]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -50.0
+offset_right = 80.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Root/StartScreen/Content" unique_id=409441311]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "DUNGEON
+DODGER"
+horizontal_alignment = 1
+
+[node name="StartBestLabel" type="Label" parent="Root/StartScreen/Content" unique_id=1951798042]
+unique_name_in_owner = true
+layout_mode = 2
+text = "BEST 0"
+horizontal_alignment = 1
+
+[node name="TapLabel" type="Label" parent="Root/StartScreen/Content" unique_id=599503598]
+layout_mode = 2
+text = "TAP TO PLAY"
+horizontal_alignment = 1
+
+[node name="PauseScreen" type="VBoxContainer" parent="Root" unique_id=1666705888]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -50.0
+offset_right = 80.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="PausedLabel" type="Label" parent="Root/PauseScreen" unique_id=139062324]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="Root/PauseScreen" unique_id=842643776]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+text = "RESUME"
+
+[node name="GameOverScreen" type="VBoxContainer" parent="Root" unique_id=869143772]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -60.0
+offset_right = 80.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="GameOverLabel" type="Label" parent="Root/GameOverScreen" unique_id=102703591]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="FinalScoreLabel" type="Label" parent="Root/GameOverScreen" unique_id=1373140748]
+unique_name_in_owner = true
+layout_mode = 2
+text = "SCORE 0"
+horizontal_alignment = 1
+
+[node name="GameOverBestLabel" type="Label" parent="Root/GameOverScreen" unique_id=1793427719]
+unique_name_in_owner = true
+layout_mode = 2
+text = "BEST 0"
+horizontal_alignment = 1
+
+[node name="NewBestLabel" type="Label" parent="Root/GameOverScreen" unique_id=387247053]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.921569, 0.623529, 0.498039, 1)
+text = "NEW BEST!"
+horizontal_alignment = 1
+
+[node name="ContinueSlot" type="VBoxContainer" parent="Root/GameOverScreen" unique_id=455163043]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="RestartButton" type="Button" parent="Root/GameOverScreen" unique_id=2054411668]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+text = "RESTART"
+
+[node name="MuteButton" type="Button" parent="Root" unique_id=2045674067]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+offset_right = 40.0
+offset_bottom = -26.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+text = "SOUND ON"
