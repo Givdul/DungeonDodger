@@ -203,6 +203,14 @@ unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
+[node name="ContinueButton" type="Button" parent="Root/GameOverScreen/ContinueSlot" unique_id=237844344]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+text = "CONTINUE (AD)"
+
 [node name="RestartButton" type="Button" parent="Root/GameOverScreen" unique_id=2054411668]
 unique_name_in_owner = true
 layout_mode = 2
@@ -250,3 +258,21 @@ grow_horizontal = 2
 grow_vertical = 0
 focus_mode = 0
 text = "SOUND ON"
+
+[node name="PrivacyButton" type="Button" parent="Root/HudArea" unique_id=577368996]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -22.0
+offset_right = 40.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+text = "PRIVACY"

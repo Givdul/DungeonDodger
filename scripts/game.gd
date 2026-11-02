@@ -16,6 +16,7 @@ static var _restarting := false
 
 
 var current_point = null
+var _has_continued := false
 @export var SAFE_DISTANCE_POINT := 50
 @export var SAFE_DISTANCE_ENEMY := 100  # Minimum distance from player (pixels)
 var point_count := 0
@@ -52,6 +53,7 @@ func _ready():
 
 	player.died.connect(_on_player_died)
 	ui.restart_requested.connect(_restart)
+	ui.continue_requested.connect(_continue)
 	if _restarting:
 		_restarting = false
 		ui.start_playing()
@@ -67,9 +69,17 @@ func _on_player_died():
 	if is_new_best:
 		ScoreManager.high_score = point_count
 		ScoreManager.save_high_score()
-	ui.show_game_over(point_count, ScoreManager.high_score, is_new_best)
+	var can_continue := not _has_continued and Ads.can_continue()
+	ui.show_game_over(point_count, ScoreManager.high_score, is_new_best, can_continue)
+
+func _continue():
+	_has_continued = true
+	if await Ads.show_continue_ad():
+		player.revive()
+		ui.start_playing()
 
 func _restart():
+	await Ads.show_interstitial_if_due()
 	_restarting = true
 	get_tree().reload_current_scene()
 
