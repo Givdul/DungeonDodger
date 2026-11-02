@@ -31,6 +31,11 @@ var point_count := 0
 var run_stats := {"hits": 0, "holes": 0, "potions": 0, "chests": 0, "seconds": 0.0, "best_unhit_seconds": 0.0}
 var _unhit_seconds := 0.0
 var _lives: int
+# What earlier deaths of this run banked, so a continued run's next death banks only what came after.
+var _banked := {}
+var _has_continued := false
+# The best before this run, which a continued run's first death may already have raised.
+var _best_before_run: int
 # Off for the gameplay bot, whose runs leave the high score and saved progress alone.
 var saves_progress := true
 
@@ -71,7 +76,8 @@ func _ready():
 	if debug:
 		dungeon.modulate.a = 0.3
 
-	high_score_var_label.text = str(ScoreManager.high_score)
+	_best_before_run = ScoreManager.high_score
+	high_score_var_label.text = str(_best_before_run)
 
 	dungeon.coin_picked_up.connect(_on_point_picked_up)
 	dungeon.chest_opened.connect(func(): run_stats.chests += 1)
@@ -82,6 +88,7 @@ func _ready():
 	player.fell.connect(_on_player_fell)
 	player.key_changed.connect(held_key.set_visible)
 	ui.restart_requested.connect(_restart)
+	ui.continue_requested.connect(_continue)
 	if _restarting:
 		_restarting = false
 		ui.start_playing()
@@ -168,25 +175,44 @@ func _on_lives_changed(lives: int) -> void:
 
 
 func _on_player_died():
-	var is_new_best := point_count > ScoreManager.high_score
 	var new_heroes: Array[String] = []
 	if saves_progress:
-		if is_new_best:
+		if point_count > ScoreManager.high_score:
 			ScoreManager.high_score = point_count
 			ScoreManager.save_high_score()
 		run_stats.crystals = point_count
-		new_heroes = Progress.record_run(run_stats)
-	ui.show_game_over(point_count, ScoreManager.high_score, is_new_best, new_heroes)
+		new_heroes = Progress.record_run(run_stats, _banked)
+		_banked = run_stats.duplicate()
+	var can_continue := not _has_continued and Ads.can_continue()
+	ui.show_game_over(point_count, ScoreManager.high_score, point_count > _best_before_run, new_heroes, can_continue)
 
 
 # Back on the safe path near the middle of the view, clear of the scroll edge.
 func _on_player_fell():
-	var middle: Vector2 = dungeon.to_local(floor_band().get_center())
-	player.global_position = dungeon.to_global(dungeon.path_spot_near(middle))
+	_place_on_safe_path()
 	player.start_invulnerability()
 
 
+func _place_on_safe_path() -> void:
+	var middle: Vector2 = dungeon.to_local(floor_band().get_center())
+	player.global_position = dungeon.to_global(dungeon.path_spot_near(middle))
+
+
+# One continue per run, whether or not the ad pays out. The player comes back on the safe
+# path, since they may have died in a hole or against the scroll edge.
+func _continue():
+	_has_continued = true
+	if not await Ads.show_continue_ad():
+		return
+	# Coming back to life isn't a potion drunk.
+	_lives = player.REVIVE_LIVES
+	_place_on_safe_path()
+	player.revive()
+	ui.resume_after_continue()
+
+
 func _restart():
+	await Ads.show_interstitial_if_due()
 	_restarting = true
 	get_tree().reload_current_scene()
 
@@ -215,8 +241,7 @@ func _on_point_picked_up():
 	point_count += 1
 	score_label.text = str(point_count)
 	ui.speed_up_for_score(point_count)
-	# ScoreManager.high_score is the old best until the run ends.
-	if ScoreManager.high_score > 0 and point_count == ScoreManager.high_score + 1:
+	if _best_before_run > 0 and point_count == _best_before_run + 1:
 		_lay_new_high_score_line()
 
 	if get_tree().get_node_count_in_group("Enemies") >= max_enemies:

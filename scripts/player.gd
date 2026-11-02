@@ -12,6 +12,8 @@ signal key_changed(has_key: bool)
 @onready var audio_stream_player_2d = $hit_sound
 @onready var death_sound = $death_sound
 @onready var heal_sound = $heal_sound
+@onready var _collision_layer := collision_layer
+@onready var _collision_mask := collision_mask
 
 
 @export var max_lives := 3
@@ -20,6 +22,7 @@ var direction := Vector2.ZERO
 var last_direction := Vector2.DOWN  # Default facing down
 
 const SPEED := 90
+const REVIVE_LIVES := 1
 # Enemies deal damage on every frame of contact, so this is what spaces hits apart.
 const BLINKS := 6
 const BLINK_SECONDS := 0.25
@@ -195,3 +198,16 @@ func die(animation := &"death"):
 	collision_layer = 0
 	collision_mask = 0
 	died.emit()
+
+## Brings a dead player back with REVIVE_LIVES, standing still and invulnerable.
+func revive():
+	is_dead = false
+	direction = Vector2.ZERO
+	current_lives = REVIVE_LIVES
+	collision_layer = _collision_layer
+	collision_mask = _collision_mask
+	set_physics_process(true)
+	set_process(true)
+	anim.play(&"idle")
+	lives_changed.emit(current_lives)
+	start_invulnerability()
