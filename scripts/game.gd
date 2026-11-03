@@ -9,6 +9,7 @@ extends Node2D
 @export var debug := false
 @onready var score_label = $Camera2D/Hud/ScoreLabel
 @onready var held_key: Sprite2D = $Camera2D/Hud/ItemBox/HeldKey
+@onready var roll_icon: Sprite2D = $Camera2D/Hud/RollBox/RollIcon
 @onready var high_score_var_label = $HighScoreVarLabel
 @onready var ui = $UI
 @onready var swipe_hint: Label = $SwipeHint
@@ -38,6 +39,7 @@ const VIEW_BOTTOM_MARGIN := 8.0
 # A push the player can't follow by more than this means something solid is in
 # the way, and the scroll edge crushes them.
 const CRUSH_TOLERANCE := 1.0
+const ROLL_ICON_COOLING_ALPHA := 0.25
 
 
 func _ready():
@@ -56,6 +58,7 @@ func _ready():
 	player.died.connect(_on_player_died)
 	player.fell.connect(_on_player_fell)
 	player.key_changed.connect(held_key.set_visible)
+	player.roll_ready_changed.connect(_show_roll_ready)
 	ui.restart_requested.connect(_restart)
 	if _restarting:
 		_restarting = false
@@ -84,6 +87,9 @@ func _physics_process(delta):
 	if player.is_falling:
 		return
 	_keep_player_in_view()
+	# A roll carries the player over holes and traps without setting them off.
+	if player.is_rolling:
+		return
 	var hazard = dungeon.hazard_at(player.position)
 	if hazard:
 		hazard.step_on(player)
@@ -127,6 +133,10 @@ func _keep_player_in_view() -> void:
 		if collision and collision.get_remainder().length() > CRUSH_TOLERANCE:
 			player.die()
 	player.position.y = maxf(player.position.y, band.position.y)
+
+
+func _show_roll_ready(is_ready: bool) -> void:
+	roll_icon.modulate.a = 1.0 if is_ready else ROLL_ICON_COOLING_ALPHA
 
 
 func _on_player_died():
