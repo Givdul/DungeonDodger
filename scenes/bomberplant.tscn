@@ -124,7 +124,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_base"]
-size = Vector2(12, 8)
+size = Vector2(12, 12)
 
 [node name="Bomberplant" type="StaticBody2D"]
 z_index = 4
@@ -134,7 +134,7 @@ script = ExtResource("1_script")
 bomb_scene = ExtResource("2_bomb")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 2)
+position = Vector2(0, -1)
 shape = SubResource("RectangleShape2D_base")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
