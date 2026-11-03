@@ -4,8 +4,13 @@ signal restart_requested
 
 enum State { START, PLAYING, PAUSED, GAME_OVER }
 
+# Root lays the UI out at a quarter of the viewport's size and draws it 4x.
+const UI_SCALE := 4.0
+
 var state := State.START
 
+@onready var root: Control = $Root
+@onready var hud_area: Control = %HudArea
 @onready var pause_button: Button = %PauseButton
 @onready var mute_button: Button = %MuteButton
 @onready var dim: ColorRect = %Dim
@@ -15,6 +20,8 @@ var state := State.START
 
 
 func _ready() -> void:
+	get_viewport().size_changed.connect(_fit_to_screen)
+	_fit_to_screen()
 	%PlayButton.pressed.connect(start_playing)
 	%ResumeButton.pressed.connect(start_playing)
 	%RestartButton.pressed.connect(restart_requested.emit)
@@ -22,6 +29,17 @@ func _ready() -> void:
 	mute_button.pressed.connect(Settings.toggle_mute)
 	Settings.muted_changed.connect(_show_muted)
 	_show_muted(Settings.muted)
+
+
+func _fit_to_screen() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	root.size = viewport_size / UI_SCALE
+	# The game puts the room's top wall, where the hearts and score sit, at the top of the safe area.
+	var safe := SafeArea.in_viewport(get_viewport())
+	hud_area.offset_left = safe.position.x / UI_SCALE
+	hud_area.offset_top = safe.position.y / UI_SCALE
+	hud_area.offset_right = (safe.end.x - viewport_size.x) / UI_SCALE
+	hud_area.offset_bottom = (safe.end.y - viewport_size.y) / UI_SCALE
 
 
 func _notification(what: int) -> void:
