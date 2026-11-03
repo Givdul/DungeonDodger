@@ -27,12 +27,15 @@ const FLOOR_DETAIL_CHANCE := 0.08
 const PATH_TURN_CHANCE := 0.25
 # Rows below the player's start with no hazards, so a run opens gently.
 const ROWS_BEFORE_HAZARDS := 12
-# Chance that a floor cell off the safe path holds a hazard. It grows with each
-# row past the opening, up to the max.
-const HAZARD_CHANCE_PER_ROW := 0.004
-const MAX_HAZARD_CHANCE := 0.45
-const CRUMBLING_PIT_SHARE := 0.3
-const SPIKES_SHARE := 0.3
+# Holes come in clusters: a few seed cells, which spread to the cells below and
+# beside them. The seed chance grows with each row past the opening, up to the max.
+const HOLE_SEED_CHANCE_PER_ROW := 0.0004
+const MAX_HOLE_SEED_CHANCE := 0.04
+const HOLE_SPREAD_CHANCE := 0.55
+# Spikes and cracked floor are scattered one cell at a time, and ramp up the same way.
+const TRAP_CHANCE_PER_ROW := 0.002
+const MAX_TRAP_CHANCE := 0.2
+const SPIKES_SHARE := 0.5
 # Bomberplants are solid, so like hazards they stay off the safe path.
 const ROWS_BEFORE_PLANTS := 30
 const PLANT_CHANCE_PER_ROW := 0.05
@@ -44,7 +47,7 @@ const KEY_CHANCE_PER_ROW := 0.015
 const HAZARD_EDGE_GRACE := 3.0
 
 const COIN_RUN_LENGTH := Vector2i(3, 5)
-const ROWS_BETWEEN_COIN_RUNS := Vector2i(4, 9)
+const ROWS_BETWEEN_COIN_RUNS := Vector2i(6, 12)
 # Keeps the first coins out from under the player at the start of a run.
 const ROWS_BEFORE_FIRST_COIN_RUN := 3
 
@@ -108,10 +111,18 @@ func _build_row(row: int) -> void:
 		set_cell(Vector2i(column, row), 0, tile)
 
 	var path := _advance_path()
-	var hazard_chance := clampf((row - _first_hazard_row) * HAZARD_CHANCE_PER_ROW, 0.0, MAX_HAZARD_CHANCE)
+	var depth := row - _first_hazard_row
+	var hole_seed_chance := clampf(depth * HOLE_SEED_CHANCE_PER_ROW, 0.0, MAX_HOLE_SEED_CHANCE)
+	var trap_chance := clampf(depth * TRAP_CHANCE_PER_ROW, 0.0, MAX_TRAP_CHANCE)
 	for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
-		if column not in path and randf() < hazard_chance:
-			_place_hazard(Vector2i(column, row))
+		if column in path:
+			continue
+		var cell := Vector2i(column, row)
+		var beside_hole := _is_hole(cell + Vector2i.UP) or _is_hole(cell + Vector2i.LEFT)
+		if randf() < (HOLE_SPREAD_CHANCE if beside_hole else hole_seed_chance):
+			_place_hole(cell)
+		elif randf() < trap_chance:
+			_place_trap(cell)
 	if row >= _first_plant_row and randf() < PLANT_CHANCE_PER_ROW:
 		_place_solid(bomberplant_scene, row, _free_columns(row, path))
 	if row >= _first_item_row and randf() < CHEST_CHANCE_PER_ROW:
@@ -165,14 +176,25 @@ func free_spot_near(point: Vector2) -> Vector2:
 	return spots.pick_random() if not spots.is_empty() else point
 
 
-func _place_hazard(cell: Vector2i) -> void:
-	var roll := randf()
-	var hazard: Node2D
-	if roll < SPIKES_SHARE:
-		hazard = spikes_scene.instantiate()
+func _is_hole(cell: Vector2i) -> bool:
+	var hazard = _hazards.get(cell)
+	return hazard is Pit and not hazard.crumbles
+
+
+func _place_hole(cell: Vector2i) -> void:
+	_place_hazard(cell, pit_scene.instantiate())
+
+
+func _place_trap(cell: Vector2i) -> void:
+	if randf() < SPIKES_SHARE:
+		_place_hazard(cell, spikes_scene.instantiate())
 	else:
-		hazard = pit_scene.instantiate()
-		hazard.crumbles = roll < SPIKES_SHARE + CRUMBLING_PIT_SHARE
+		var cracked_floor: Pit = pit_scene.instantiate()
+		cracked_floor.crumbles = true
+		_place_hazard(cell, cracked_floor)
+
+
+func _place_hazard(cell: Vector2i, hazard: Node2D) -> void:
 	hazard.position = map_to_local(cell)
 	add_child(hazard)
 	_hazards[cell] = hazard
