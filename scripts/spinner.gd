@@ -29,6 +29,13 @@ func _physics_process(delta: float) -> void:
 	if $HitArea.overlaps_body(player):
 		player.take_damage()
 
+	# It walks on the floor, so it cracks crumbling tiles and falls into holes, even while paused.
+	var hole = game.dungeon.hazard_at(global_position)
+	if hole is Pit:
+		hole.step_on(self)
+		if is_dead:
+			return
+
 	if _run_direction == Vector2.ZERO:
 		_pause_left -= delta
 		if _pause_left <= 0:
@@ -37,10 +44,6 @@ func _physics_process(delta: float) -> void:
 
 	_run_time_left -= delta
 	var crashed := move_and_collide(_run_direction * speed * delta) != null
-	var hole = game.dungeon.hazard_at(global_position)
-	if hole is Pit and hole.is_open():
-		_fall_into(hole.global_position)
-		return
 	if crashed or _run_time_left <= 0:
 		_run_direction = Vector2.ZERO
 		_pause_left = pause_time
@@ -58,7 +61,7 @@ func _start_run() -> void:
 
 
 # The spinner has no fall animation, so it slides into the hole and shrinks into the dark.
-func _fall_into(hole_center: Vector2) -> void:
+func fall_into(hole_center: Vector2) -> void:
 	is_dead = true
 	var tween := create_tween()
 	tween.tween_property(self, "global_position", hole_center, FALL_SLIDE_SECONDS)
