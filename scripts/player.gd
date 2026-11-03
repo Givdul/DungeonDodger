@@ -16,13 +16,16 @@ var last_direction := Vector2.DOWN  # Default facing down
 
 const SPEED := 130
 # Enemies deal damage on every frame of contact, so this is what spaces hits apart.
-const INVULNERABLE_SECONDS := 1.0
+const INVULNERABLE_SECONDS := 1.5
+const BLINK_SECONDS := 0.25
+const BLINK_FADED_ALPHA := 0.2
 const FALL_SLIDE_SECONDS := 0.12
 # The fall strip shrinks toward the bottom of its frame, this far above the feet.
 const FALL_SPRITE_RISE := 2.0
 var is_dead := false
 var is_hit := false  # Flag to know if hit anim is playing
 var is_invulnerable := false
+var invulnerability_tween: Tween
 var has_key := false:
 	set(value):
 		has_key = value
@@ -74,14 +77,13 @@ func take_damage():
 		return
 	
 	current_lives -= 1
-	is_invulnerable = true
-	get_tree().create_timer(INVULNERABLE_SECONDS, false).timeout.connect(func(): is_invulnerable = false)
 	emit_signal("lives_changed", current_lives)
 	
 	if current_lives <= 0:
 		die()
 		return
 		
+	start_invulnerability()
 	audio_stream_player_2d.play()
 	
 	# Play hit animation in the correct direction
@@ -118,6 +120,24 @@ func take_damage():
 	else:
 		anim.play("idle")
 
+## Makes the player immune for INVULNERABLE_SECONDS and blinks the sprite until it ends.
+func start_invulnerability():
+	_stop_invulnerability()
+	is_invulnerable = true
+	# A tween belongs to the player, so it freezes with the game and a restart frees it.
+	invulnerability_tween = create_tween().set_loops(roundi(INVULNERABLE_SECONDS / BLINK_SECONDS))
+	invulnerability_tween.tween_callback(func(): anim.modulate.a = BLINK_FADED_ALPHA)
+	invulnerability_tween.tween_interval(BLINK_SECONDS / 2)
+	invulnerability_tween.tween_callback(func(): anim.modulate.a = 1.0)
+	invulnerability_tween.tween_interval(BLINK_SECONDS / 2)
+	invulnerability_tween.finished.connect(_stop_invulnerability)
+
+func _stop_invulnerability():
+	is_invulnerable = false
+	if invulnerability_tween:
+		invulnerability_tween.kill()
+	anim.modulate.a = 1.0
+
 ## Pulls the player into the hole and plays the fall.
 func fall_into(hole_center: Vector2):
 	if is_dead:
@@ -130,6 +150,7 @@ func die(animation := &"death"):
 	if is_dead:
 		return
 	is_dead = true
+	_stop_invulnerability()
 	anim.play(animation)
 	death_sound.play()
 	# Wait for animation to finish
