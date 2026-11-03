@@ -50,25 +50,27 @@ const PATH_TURN_CHANCE := 0.25
 const ROWS_BEFORE_HAZARDS := 12
 # Holes come in clusters: a few seed cells, which spread to the cells ahead of and
 # beside them. The seed chance grows with each row past the opening, up to the max.
-const HOLE_SEED_CHANCE_PER_ROW := 0.0004
-const MAX_HOLE_SEED_CHANCE := 0.04
+const HOLE_SEED_CHANCE_PER_ROW := 0.00025
+const MAX_HOLE_SEED_CHANCE := 0.035
 const HOLE_SPREAD_CHANCE := 0.55
 # Spikes and cracked floor are scattered one cell at a time, and ramp up the same way.
-const TRAP_CHANCE_PER_ROW := 0.002
-const MAX_TRAP_CHANCE := 0.2
+const TRAP_CHANCE_PER_ROW := 0.0012
+const MAX_TRAP_CHANCE := 0.18
 const SPIKES_SHARE := 0.5
-# Bomberplants are solid, so like hazards they stay off the safe path.
+# Bomberplants are solid, so like hazards they stay off the safe path. Only one
+# grows at a time, so the built rows, and the view, never hold two.
 const ROWS_BEFORE_PLANTS := 30
-const PLANT_CHANCE_PER_ROW := 0.05
+const PLANT_CHANCE_PER_ROW := 0.025
 const ROWS_BEFORE_ITEMS := 20
-const CHEST_CHANCE_PER_ROW := 0.015
-const KEY_CHANCE_PER_ROW := 0.015
+const CHEST_CHANCE_PER_ROW := 0.008
+const KEY_CHANCE_PER_ROW := 0.008
 # Pixels in from a hazard cell's edges where the player's feet set it off, so
 # brushing a corner doesn't count.
 const HAZARD_EDGE_GRACE := 3.0
 
-# Empty rows between one coin and the next.
-const ROWS_BETWEEN_COINS := Vector2i(1, 4)
+# Empty rows between one coin and the next, picked from these. The repeated 2
+# makes short gaps likelier, for about 0.3 coins a row.
+const ROWS_BETWEEN_COINS: Array[int] = [1, 2, 2, 3, 4]
 # Rows ahead of the player's start before the first coin.
 const ROWS_BEFORE_FIRST_COIN := 3
 
@@ -83,6 +85,7 @@ var _path_columns: Dictionary[int, Array] = {}
 var _hazards: Dictionary[Vector2i, Node2D] = {}
 # Bomberplants and chests, which block the cell they stand on.
 var _solids: Dictionary[Vector2i, Node2D] = {}
+var _plant: Node2D
 var _coin_path_side := 0
 # Chests only spawn once a key has been picked up, so the first one is never unopenable.
 var _key_found := false
@@ -186,8 +189,8 @@ func _build_row(row: int) -> void:
 			_place_hole(cell)
 		elif randf() < trap_chance:
 			_place_trap(cell)
-	if rows_ahead >= ROWS_BEFORE_PLANTS and randf() < PLANT_CHANCE_PER_ROW:
-		_place_solid(bomberplant_scene, row, _solid_columns(row, path))
+	if rows_ahead >= ROWS_BEFORE_PLANTS and not is_instance_valid(_plant) and randf() < PLANT_CHANCE_PER_ROW:
+		_plant = _place_solid(bomberplant_scene, row, _solid_columns(row, path))
 	if _key_found and rows_ahead >= ROWS_BEFORE_ITEMS and randf() < CHEST_CHANCE_PER_ROW:
 		# Right beside the path, so the player can always reach it.
 		var beside_path := [path.front() - 1, path.back() + 1]
@@ -227,14 +230,15 @@ func _solid_columns(row: int, path: Array) -> Array:
 		return column not in path and _is_free_cell(cell))
 
 
-func _place_solid(scene: PackedScene, row: int, columns: Array) -> void:
+func _place_solid(scene: PackedScene, row: int, columns: Array) -> Node2D:
 	if columns.is_empty():
-		return
+		return null
 	var cell := Vector2i(columns.pick_random(), row)
 	var solid: Node2D = scene.instantiate()
 	solid.position = map_to_local(cell)
 	add_child(solid)
 	_solids[cell] = solid
+	return solid
 
 
 func _is_hole(cell: Vector2i) -> bool:
@@ -266,7 +270,7 @@ func _place_coins(row: int) -> void:
 	if _rows_until_coin > 0:
 		_rows_until_coin -= 1
 		return
-	_rows_until_coin = randi_range(ROWS_BETWEEN_COINS.x, ROWS_BETWEEN_COINS.y)
+	_rows_until_coin = ROWS_BETWEEN_COINS.pick_random()
 	_coin_path_side = randi_range(0, 1)
 
 	var coin := coin_scene.instantiate()

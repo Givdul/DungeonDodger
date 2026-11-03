@@ -28,9 +28,15 @@ var point_count := 0
 @export var padding_right := 6
 
 # Pixels per second the view scrolls up. It speeds up with the score, up to the max.
-@export var start_scroll_speed := 14.0
-@export var scroll_speed_per_point := 0.25
-@export var max_scroll_speed := 40.0
+# Keep the max well below the phantoms' speed, or they fall behind and never catch up.
+@export var start_scroll_speed := 20.0
+@export var scroll_speed_per_point := 0.15
+@export var max_scroll_speed := 27.0
+
+# The score at which the first phantom comes, so a run opens with a warm-up.
+@export var first_phantom_points := 5
+# Past this many enemies, dying ones included, a score milestone spawns nothing.
+@export var max_enemies := 7
 
 # How far inside the view's top and bottom edges the player's feet stay, and
 # where enemies spawn and bombs land. The top one keeps sprites below the hearts and score.
@@ -201,14 +207,30 @@ func _on_point_picked_up():
 	point_count += 1
 	score_label.text = str(point_count)
 
-	if point_count == 1:
+	if get_tree().get_node_count_in_group("Enemies") >= max_enemies:
+		return
+	if point_count == first_phantom_points:
 		spawn_enemy(phantom_scene)
 	elif point_count == 10:
 		spawn_enemy(bat_scene)
 	elif point_count == 20:
 		spawn_enemy(spinner_scene)
 	elif point_count % 10 == 0:
-		spawn_enemy([phantom_scene, bat_scene, spinner_scene].pick_random())
+		spawn_enemy(_scarcest_enemy_scene())
+
+
+# The kind with the fewest alive, ties broken at random, so the mix stays even.
+# Bats hit hardest, so only one is out at a time.
+func _scarcest_enemy_scene() -> PackedScene:
+	var enemies := get_tree().get_nodes_in_group("Enemies")
+	var alive := func(scene: PackedScene) -> int:
+		return enemies.filter(func(enemy): return enemy.scene_file_path == scene.resource_path).size()
+	var scenes: Array[PackedScene] = [phantom_scene, spinner_scene]
+	if alive.call(bat_scene) == 0:
+		scenes.append(bat_scene)
+	scenes.shuffle()
+	var counts := scenes.map(alive)
+	return scenes[counts.find(counts.min())]
 
 
 func spawn_enemy(enemy_scene: PackedScene):

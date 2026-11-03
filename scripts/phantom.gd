@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-@export var speed := 60
+@export var speed := 45
 # Phantoms closer than this push each other apart, so a group fans out around the player.
 const SEPARATION_RADIUS := 24.0
 # How far to the side of the player a phantom aims when far away; the offset is gone
