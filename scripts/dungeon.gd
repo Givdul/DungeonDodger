@@ -67,10 +67,10 @@ const KEY_CHANCE_PER_ROW := 0.015
 # brushing a corner doesn't count.
 const HAZARD_EDGE_GRACE := 3.0
 
-const COIN_RUN_LENGTH := Vector2i(3, 5)
-const ROWS_BETWEEN_COIN_RUNS := Vector2i(6, 12)
-# Rows ahead of the player's start before the first coins.
-const ROWS_BEFORE_FIRST_COIN_RUN := 3
+# Empty rows between one coin and the next.
+const ROWS_BETWEEN_COINS := Vector2i(1, 4)
+# Rows ahead of the player's start before the first coin.
+const ROWS_BEFORE_FIRST_COIN := 3
 
 # Rows are built upward, from the bottom of the view. _next_row is the next one
 # to build and _bottom_row the oldest one still built.
@@ -86,15 +86,14 @@ var _solids: Dictionary[Vector2i, Node2D] = {}
 var _coin_path_side := 0
 # Chests only spawn once a key has been picked up, so the first one is never unopenable.
 var _key_found := false
-var _coins_left_in_run := 0
-var _rows_until_coin_run := ROWS_BEFORE_FIRST_COIN_RUN
+var _rows_until_coin := ROWS_BEFORE_FIRST_COIN
 
 
 func start(view: Rect2) -> void:
 	_bottom_row = _row_at(view.end.y)
 	_next_row = _bottom_row
 	_start_row = _row_at(view.get_center().y)
-	_rows_until_coin_run += _bottom_row - _start_row
+	_rows_until_coin += _bottom_row - _start_row
 	follow(view)
 
 
@@ -262,15 +261,13 @@ func _place_hazard(cell: Vector2i, hazard: Node2D) -> void:
 	_hazards[cell] = hazard
 
 
-# Coins come in short runs along the safe path, like the lines of coins in Subway Surfers.
+# Coins are spread out one at a time along the safe path, on either of its columns.
 func _place_coins(row: int) -> void:
-	if _coins_left_in_run == 0:
-		if _rows_until_coin_run > 0:
-			_rows_until_coin_run -= 1
-			return
-		_coins_left_in_run = randi_range(COIN_RUN_LENGTH.x, COIN_RUN_LENGTH.y)
-		_rows_until_coin_run = randi_range(ROWS_BETWEEN_COIN_RUNS.x, ROWS_BETWEEN_COIN_RUNS.y)
-		_coin_path_side = randi_range(0, 1)
+	if _rows_until_coin > 0:
+		_rows_until_coin -= 1
+		return
+	_rows_until_coin = randi_range(ROWS_BETWEEN_COINS.x, ROWS_BETWEEN_COINS.y)
+	_coin_path_side = randi_range(0, 1)
 
 	var coin := coin_scene.instantiate()
 	coin.position = map_to_local(Vector2i(_path_column + _coin_path_side, row))
@@ -279,7 +276,6 @@ func _place_coins(row: int) -> void:
 	# Deferred: picked_up fires inside a physics callback, where spawning new bodies is refused.
 	coin.picked_up.connect(coin_picked_up.emit, CONNECT_DEFERRED)
 	add_child(coin)
-	_coins_left_in_run -= 1
 
 
 func _drop_row(row: int) -> void:
