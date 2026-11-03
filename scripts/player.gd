@@ -102,6 +102,8 @@ func take_damage():
 		anim.play("idle")
 
 func die():
+	if is_dead:
+		return
 	is_dead = true
 	anim.play("death")
 	death_sound.play()
