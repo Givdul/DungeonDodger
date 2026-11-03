@@ -82,6 +82,8 @@ var _hazards: Dictionary[Vector2i, Node2D] = {}
 # Bomberplants and chests, which block the cell they stand on.
 var _solids: Dictionary[Vector2i, Node2D] = {}
 var _coin_path_side := 0
+# Chests only spawn once a key has been picked up, so the first one is never unopenable.
+var _key_found := false
 var _coins_left_in_run := 0
 var _rows_until_coin_run := ROWS_BEFORE_FIRST_COIN_RUN
 
@@ -176,7 +178,7 @@ func _build_row(row: int) -> void:
 			_place_trap(cell)
 	if rows_ahead >= ROWS_BEFORE_PLANTS and randf() < PLANT_CHANCE_PER_ROW:
 		_place_solid(bomberplant_scene, row, _solid_columns(row, path))
-	if rows_ahead >= ROWS_BEFORE_ITEMS and randf() < CHEST_CHANCE_PER_ROW:
+	if _key_found and rows_ahead >= ROWS_BEFORE_ITEMS and randf() < CHEST_CHANCE_PER_ROW:
 		# Right beside the path, so the player can always reach it.
 		var beside_path := [path.front() - 1, path.back() + 1]
 		_place_solid(chest_scene, row, _solid_columns(row, path).filter(func(column): return column in beside_path))
@@ -185,6 +187,7 @@ func _build_row(row: int) -> void:
 		# On the path column the coins aren't using.
 		var key := key_scene.instantiate()
 		key.position = map_to_local(Vector2i(_path_column + 1 - _coin_path_side, row))
+		key.picked_up.connect(func(): _key_found = true)
 		add_child(key)
 
 
