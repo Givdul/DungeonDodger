@@ -5,6 +5,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Bomberplant_Sprites/bomb_going_down_anim_strip_4.png" id="t1_down"]
 [ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Bomberplant_Sprites/bomb_hit_marker_fx_anim_strip_4.png" id="t0_marker"]
 [ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Bomberplant_Sprites/bomb_explosion_anim_strip_8.png" id="t0_explosion"]
+[ext_resource type="AudioStream" uid="uid://dxwqn1fe7k0w1" path="res://assets/sounds/fuse.wav" id="s0_fuse"]
+[ext_resource type="AudioStream" uid="uid://dggwu3us4mxlj" path="res://assets/sounds/explosion.wav" id="s1_explosion"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_up0"]
 atlas = ExtResource("t0_up")
@@ -196,3 +198,12 @@ visible = false
 z_index = 7
 z_as_relative = false
 sprite_frames = SubResource("SpriteFrames_explosion")
+
+[node name="FuseSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("s0_fuse")
+bus = &"SFX"
+
+[node name="ExplosionSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("s1_explosion")
+volume_db = 4.0
+bus = &"SFX"

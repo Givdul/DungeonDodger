@@ -28,9 +28,14 @@ func launch(from: Vector2, target: Vector2) -> void:
 	bomb.play(&"up")
 	var tween := create_tween()
 	tween.tween_method(_fly.bind(start), 0.0, 1.0, flight_time)
-	tween.tween_callback(func(): bomb.z_index = LANDED_Z_INDEX)
+	tween.tween_callback(_land)
 	_tween_fuse(tween)
 	tween.tween_callback(_explode)
+
+
+func _land() -> void:
+	bomb.z_index = LANDED_Z_INDEX
+	$FuseSound.play()
 
 
 func _tween_fuse(tween: Tween) -> void:
@@ -52,6 +57,8 @@ func _fly(progress: float, start: Vector2) -> void:
 
 
 func _explode() -> void:
+	$FuseSound.stop()
+	$ExplosionSound.play()
 	bomb.hide()
 	$Marker.hide()
 	explosion.show()

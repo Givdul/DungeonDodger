@@ -46,6 +46,34 @@ def noise(seconds: float, rng: random.Random):
     return [rng.uniform(-1, 1) * (1.0 - i / count) ** 3 for i in range(count)]
 
 
+def hiss(seconds: float, rng: random.Random):
+    """A burning fuse: high-passed noise that crackles and swells as it burns down."""
+    count = int(seconds * RATE)
+    out = []
+    previous = 0.0
+    crackle = 0.0
+    for i in range(count):
+        t = i / count
+        raw = rng.uniform(-1, 1)
+        out.append((raw - previous) * (0.5 + 0.5 * t) * (0.6 + 0.4 * crackle))
+        previous = raw
+        if rng.random() < 0.0015:
+            crackle = 1.0
+        crackle *= 0.995
+    return out
+
+
+def rumble(seconds: float, rng: random.Random):
+    """Low-passed noise that dies away, the body of an explosion."""
+    count = int(seconds * RATE)
+    out = []
+    low = 0.0
+    for i in range(count):
+        low += (rng.uniform(-1, 1) - low) * 0.12
+        out.append(low * (1.0 - i / count) ** 2)
+    return out
+
+
 def mix(*voices):
     length = max(len(v) for v in voices)
     return [sum(v[i] for v in voices if i < len(v)) for i in range(length)]
@@ -73,6 +101,14 @@ def main() -> None:
         "assets/sounds/lose-10.wav",
         notes([523, 440, 349], 0.16) + tone([294, 147], 0.46, vibrato=0.02),
         0.03,
+    )
+    # The fuse is as long as a bomb's default fuse_time. The explosion is shorter
+    # than the explosion animation, because the bomb frees itself when that ends.
+    write("assets/sounds/fuse.wav", hiss(2.5, rng), 0.02)
+    write(
+        "assets/sounds/explosion.wav",
+        mix(rumble(0.5, rng), tone([180, 40], 0.4), noise(0.08, rng)),
+        0.08,
     )
 
 
