@@ -83,8 +83,8 @@ func start_playing() -> void:
 	_set_state(State.PLAYING)
 
 
-# The tree stays paused throughout, so the swipes MobileInputs would turn into
-# move_* actions never arrive and the player keeps their direction.
+# The tree stays paused throughout, and MobileInputs turns no swipes into move_*
+# actions while it is, so the player keeps their direction.
 func _start_countdown() -> void:
 	_set_state(State.RESUMING)
 	countdown_label.text = str(COUNTDOWN_FROM)
