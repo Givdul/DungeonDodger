@@ -101,11 +101,11 @@ func take_damage():
 	else:
 		anim.play("idle")
 
-func die():
+func die(animation := &"death"):
 	if is_dead:
 		return
 	is_dead = true
-	anim.play("death")
+	anim.play(animation)
 	death_sound.play()
 	# Wait for animation to finish
 	await anim.animation_finished

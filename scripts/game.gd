@@ -67,6 +67,9 @@ func _physics_process(delta):
 	camera.position.y += scroll_speed() * delta
 	dungeon.follow(view_rect())
 	_keep_player_in_view()
+	var hazard = dungeon.hazard_at(player.position)
+	if hazard:
+		hazard.step_on(player)
 
 
 func scroll_speed() -> float:

@@ -1,0 +1,101 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/spikes.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c5jnnne4lk7m2" path="res://assets/sprites/Tiles_(animated)/Dungeon/spikes_tile_trap_anim_strip_12.png" id="2_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes0"]
+atlas = ExtResource("2_tex")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes1"]
+atlas = ExtResource("2_tex")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes2"]
+atlas = ExtResource("2_tex")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes3"]
+atlas = ExtResource("2_tex")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes4"]
+atlas = ExtResource("2_tex")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes5"]
+atlas = ExtResource("2_tex")
+region = Rect2(80, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes6"]
+atlas = ExtResource("2_tex")
+region = Rect2(96, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes7"]
+atlas = ExtResource("2_tex")
+region = Rect2(112, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes8"]
+atlas = ExtResource("2_tex")
+region = Rect2(128, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes9"]
+atlas = ExtResource("2_tex")
+region = Rect2(144, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes10"]
+atlas = ExtResource("2_tex")
+region = Rect2(160, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_spikes11"]
+atlas = ExtResource("2_tex")
+region = Rect2(176, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_spikes"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes9")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_spikes11")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]
+
+[node name="Spikes" type="AnimatedSprite2D"]
+sprite_frames = SubResource("SpriteFrames_spikes")
+animation = &"default"
+script = ExtResource("1_script")
