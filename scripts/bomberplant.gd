@@ -9,9 +9,9 @@ extends StaticBody2D
 # Frame of the attack animation where the bomb leaves the plant.
 const LAUNCH_FRAME := 7
 const MOUTH_OFFSET := Vector2(0, -12)
-# Bombs land anywhere on screen that's at least this far below the view top once
-# the floor has scrolled until they blow. So they explode below the hearts and
-# score, where the player can still lead enemies onto them.
+# Bombs land anywhere on screen below the hearts and score that's still at least
+# the bottom margin inside the view once the floor has scrolled until they blow.
+# So they explode where the player can still lead enemies onto them.
 const LANDING_TOP_MARGIN := 48.0
 const LANDING_BOTTOM_MARGIN := 8.0
 
@@ -47,5 +47,5 @@ func _on_frame_changed() -> void:
 
 func _landing_spot(seconds_to_explode: float) -> Vector2:
 	var view: Rect2 = game.view_rect()
-	var top: float = view.position.y + game.scroll_speed() * seconds_to_explode + LANDING_TOP_MARGIN
-	return get_parent().free_spot_between(top, view.end.y - LANDING_BOTTOM_MARGIN)
+	var bottom: float = view.end.y - game.scroll_speed() * seconds_to_explode - LANDING_BOTTOM_MARGIN
+	return get_parent().free_spot_between(view.position.y + LANDING_TOP_MARGIN, bottom)

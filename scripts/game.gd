@@ -22,7 +22,7 @@ var point_count := 0
 @export var padding_left := 6
 @export var padding_right := 6
 
-# Pixels per second the view scrolls down. It speeds up with the score, up to the max.
+# Pixels per second the view scrolls up. It speeds up with the score, up to the max.
 @export var start_scroll_speed := 14.0
 @export var scroll_speed_per_point := 0.25
 @export var max_scroll_speed := 40.0
@@ -67,7 +67,7 @@ func _process(_delta):
 func _physics_process(delta):
 	if player.is_dead:
 		return
-	camera.position.y += scroll_speed() * delta
+	camera.position.y -= scroll_speed() * delta
 	dungeon.follow(view_rect())
 	_keep_player_in_view()
 	var hazard = dungeon.hazard_at(player.position)
@@ -96,12 +96,12 @@ func _place_hud() -> void:
 
 func _keep_player_in_view() -> void:
 	var view := view_rect()
-	var top := view.position.y + VIEW_TOP_MARGIN
-	if player.position.y < top:
-		var collision: KinematicCollision2D = player.move_and_collide(Vector2(0, top - player.position.y))
+	var bottom := view.end.y - VIEW_BOTTOM_MARGIN
+	if player.position.y > bottom:
+		var collision: KinematicCollision2D = player.move_and_collide(Vector2(0, bottom - player.position.y))
 		if collision and collision.get_remainder().length() > CRUSH_TOLERANCE:
 			player.die()
-	player.position.y = minf(player.position.y, view.end.y - VIEW_BOTTOM_MARGIN)
+	player.position.y = maxf(player.position.y, view.position.y + VIEW_TOP_MARGIN)
 
 
 func _on_player_died():
