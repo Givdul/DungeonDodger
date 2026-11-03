@@ -2,6 +2,7 @@ extends Node2D
 
 @export var phantom_scene: PackedScene
 @export var bat_scene: PackedScene
+@export var spinner_scene: PackedScene
 @onready var player = $Player
 @onready var camera: Camera2D = $Camera2D
 @onready var dungeon = $Dungeon
@@ -156,20 +157,14 @@ func _on_point_picked_up():
 	point_count += 1
 	score_label.text = str(point_count)
 
-	if(point_count == 1):
+	if point_count == 1:
 		spawn_enemy(phantom_scene)
-		return
-
-	if(point_count == 10):
-		# Spawn a bat after the first 10 points
+	elif point_count == 10:
 		spawn_enemy(bat_scene)
-		return
-
-	if point_count % 10 == 0:
-		var enemy_scene = phantom_scene
-		if randi() % 2 == 0:
-			enemy_scene = bat_scene
-		spawn_enemy(enemy_scene)
+	elif point_count == 20:
+		spawn_enemy(spinner_scene)
+	elif point_count % 10 == 0:
+		spawn_enemy([phantom_scene, bat_scene, spinner_scene].pick_random())
 
 
 func spawn_enemy(enemy_scene: PackedScene):

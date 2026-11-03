@@ -1,0 +1,144 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bomberplant.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/bomb.tscn" id="2_bomb"]
+[ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Bomberplant_Sprites/bomberplant_idle_anim_all_dir_strip_5.png" id="t0_idle"]
+[ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Bomberplant_Sprites/bomberplant_attack_anim_all_dir_strip_10.png" id="t1_attack"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle0"]
+atlas = ExtResource("t0_idle")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle1"]
+atlas = ExtResource("t0_idle")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle2"]
+atlas = ExtResource("t0_idle")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle3"]
+atlas = ExtResource("t0_idle")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_idle4"]
+atlas = ExtResource("t0_idle")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack0"]
+atlas = ExtResource("t1_attack")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack1"]
+atlas = ExtResource("t1_attack")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack2"]
+atlas = ExtResource("t1_attack")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack3"]
+atlas = ExtResource("t1_attack")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack4"]
+atlas = ExtResource("t1_attack")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack5"]
+atlas = ExtResource("t1_attack")
+region = Rect2(80, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack6"]
+atlas = ExtResource("t1_attack")
+region = Rect2(96, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack7"]
+atlas = ExtResource("t1_attack")
+region = Rect2(112, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack8"]
+atlas = ExtResource("t1_attack")
+region = Rect2(128, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_attack9"]
+atlas = ExtResource("t1_attack")
+region = Rect2(144, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_plant"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_idle4")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_attack9")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 10.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_base"]
+size = Vector2(12, 8)
+
+[node name="Bomberplant" type="StaticBody2D"]
+z_index = 4
+z_as_relative = false
+scale = Vector2(1.4, 1.4)
+script = ExtResource("1_script")
+bomb_scene = ExtResource("2_bomb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_base")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -2)
+sprite_frames = SubResource("SpriteFrames_plant")
+animation = &"idle"
+autoplay = "idle"

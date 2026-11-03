@@ -29,6 +29,8 @@ func _start_lock_timer():
 	timer.start(lock_time * randf_range(0.8, 1.2))
 
 func _physics_process(delta):
+	if state == "dead":
+		return
 	if not is_instance_valid(player):
 		player = null
 		state = "locking"  # Reset so it doesn't rush into a wall next round
@@ -88,3 +90,13 @@ func _bumps_bat(new_pos: Vector2) -> bool:
 		if new_gap < bat_spacing and new_gap < position.distance_to(bat.position):
 			return true
 	return false
+
+
+func die():
+	if state == "dead":
+		return
+	state = "dead"
+	timer.stop()
+	anim.play("death_right" if anim.animation.ends_with("right") else "death_left")
+	await anim.animation_finished
+	queue_free()
