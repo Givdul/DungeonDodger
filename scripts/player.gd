@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 signal lives_changed(lives)
 signal died
+signal key_changed(has_key: bool)
 
 @onready var anim = $AnimatedSprite2D
 @onready var audio_stream_player_2d = $hit_sound
@@ -19,6 +20,10 @@ const INVULNERABLE_SECONDS := 1.0
 var is_dead := false
 var is_hit := false  # Flag to know if hit anim is playing
 var is_invulnerable := false
+var has_key := false:
+	set(value):
+		has_key = value
+		key_changed.emit(value)
 
 func _physics_process(_delta):
 	if is_dead:
@@ -54,6 +59,12 @@ func _physics_process(_delta):
 func _ready():
 	current_lives = max_lives
 	emit_signal("lives_changed", current_lives)
+
+func heal():
+	if is_dead:
+		return
+	current_lives = mini(current_lives + 1, max_lives)
+	lives_changed.emit(current_lives)
 
 func take_damage():
 	if current_lives <= 0 or is_invulnerable or is_dead:

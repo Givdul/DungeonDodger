@@ -11,6 +11,8 @@ signal coin_picked_up
 @export var spikes_scene: PackedScene
 @export var pit_scene: PackedScene
 @export var bomberplant_scene: PackedScene
+@export var chest_scene: PackedScene
+@export var key_scene: PackedScene
 
 const LEFT_WALL_COLUMN := -4
 const RIGHT_WALL_COLUMN := 3
@@ -34,6 +36,9 @@ const SPIKES_SHARE := 0.3
 # Bomberplants are solid, so like hazards they stay off the safe path.
 const ROWS_BEFORE_PLANTS := 30
 const PLANT_CHANCE_PER_ROW := 0.05
+const ROWS_BEFORE_ITEMS := 20
+const CHEST_CHANCE_PER_ROW := 0.015
+const KEY_CHANCE_PER_ROW := 0.015
 # Pixels in from a hazard cell's edges where the player's feet set it off, so
 # brushing a corner doesn't count.
 const HAZARD_EDGE_GRACE := 3.0
@@ -47,8 +52,11 @@ var _top_row: int
 var _next_row: int
 var _first_hazard_row: int
 var _first_plant_row: int
+var _first_item_row: int
 var _path_column := randi_range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN - 1)
 var _hazards: Dictionary[Vector2i, Node2D] = {}
+# Bomberplants and chests, which block the cell they stand on.
+var _solids: Dictionary[Vector2i, Node2D] = {}
 var _coin_path_side := 0
 var _coins_left_in_run := 0
 var _rows_until_coin_run := ROWS_BEFORE_FIRST_COIN_RUN
@@ -60,6 +68,7 @@ func start(view: Rect2) -> void:
 	var start_row := _row_at(view.get_center().y)
 	_first_hazard_row = start_row + ROWS_BEFORE_HAZARDS
 	_first_plant_row = start_row + ROWS_BEFORE_PLANTS
+	_first_item_row = start_row + ROWS_BEFORE_ITEMS
 	_rows_until_coin_run += start_row - _top_row
 	follow(view)
 
@@ -104,13 +113,17 @@ func _build_row(row: int) -> void:
 		if column not in path and randf() < hazard_chance:
 			_place_hazard(Vector2i(column, row))
 	if row >= _first_plant_row and randf() < PLANT_CHANCE_PER_ROW:
-		var free_columns := range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1).filter(
-			func(column): return column not in path and not _hazards.has(Vector2i(column, row)))
-		if not free_columns.is_empty():
-			var plant := bomberplant_scene.instantiate()
-			plant.position = map_to_local(Vector2i(free_columns.pick_random(), row))
-			add_child(plant)
+		_place_solid(bomberplant_scene, row, _free_columns(row, path))
+	if row >= _first_item_row and randf() < CHEST_CHANCE_PER_ROW:
+		# Right beside the path, so the player can always reach it.
+		var beside_path := [path.front() - 1, path.back() + 1]
+		_place_solid(chest_scene, row, _free_columns(row, path).filter(func(column): return column in beside_path))
 	_place_coins(row)
+	if row >= _first_item_row and randf() < KEY_CHANCE_PER_ROW:
+		# On the path column the coins aren't using.
+		var key := key_scene.instantiate()
+		key.position = map_to_local(Vector2i(_path_column + 1 - _coin_path_side, row))
+		add_child(key)
 
 
 # Returns the columns this row keeps clear. When the path shifts a column, the row
@@ -121,6 +134,35 @@ func _advance_path() -> Array:
 	if randf() < PATH_TURN_CHANCE:
 		_path_column = clampi(_path_column + [-1, 1].pick_random(), FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN - 1)
 	return range(mini(from, _path_column), maxi(from, _path_column) + 2)
+
+
+func _free_columns(row: int, path: Array) -> Array:
+	return range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1).filter(func(column):
+		var cell := Vector2i(column, row)
+		return column not in path and not _hazards.has(cell) and not _solids.has(cell))
+
+
+func _place_solid(scene: PackedScene, row: int, columns: Array) -> void:
+	if columns.is_empty():
+		return
+	var cell := Vector2i(columns.pick_random(), row)
+	var solid: Node2D = scene.instantiate()
+	solid.position = map_to_local(cell)
+	add_child(solid)
+	_solids[cell] = solid
+
+
+## A random spot of plain floor within a few rows of the point, for things
+## that land on the floor.
+func free_spot_near(point: Vector2) -> Vector2:
+	var origin := local_to_map(point)
+	var spots := []
+	for row in range(maxi(origin.y - 2, _top_row), mini(origin.y + 4, _next_row)):
+		for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
+			var cell := Vector2i(column, row)
+			if cell != origin and not _hazards.has(cell) and not _solids.has(cell):
+				spots.append(map_to_local(cell))
+	return spots.pick_random() if not spots.is_empty() else point
 
 
 func _place_hazard(cell: Vector2i) -> void:
@@ -160,6 +202,7 @@ func _drop_row(row: int) -> void:
 	for column in range(LEFT_WALL_COLUMN, RIGHT_WALL_COLUMN + 1):
 		erase_cell(Vector2i(column, row))
 		_hazards.erase(Vector2i(column, row))
+		_solids.erase(Vector2i(column, row))
 	var row_bottom := (row + 1) * tile_set.tile_size.y
 	for child in get_children():
 		if child.position.y < row_bottom:
