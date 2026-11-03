@@ -6,6 +6,8 @@ signal died
 @onready var anim = $AnimatedSprite2D
 @onready var audio_stream_player_2d = $hit_sound
 @onready var death_sound = $death_sound
+@onready var _collision_layer := collision_layer
+@onready var _collision_mask := collision_mask
 
 
 @export var max_lives := 3
@@ -16,9 +18,12 @@ var last_direction := Vector2.DOWN  # Default facing down
 const SPEED := 130
 # Enemies deal damage on every frame of contact, so this is what spaces hits apart.
 const INVULNERABLE_SECONDS := 1.0
+# Long enough to get clear of the enemy that just killed the player.
+const REVIVE_INVULNERABLE_SECONDS := 2.0
 var is_dead := false
 var is_hit := false  # Flag to know if hit anim is playing
 var is_invulnerable := false
+var _invulnerability_timer: SceneTreeTimer
 
 func _physics_process(_delta):
 	if is_dead:
@@ -60,8 +65,7 @@ func take_damage():
 		return
 	
 	current_lives -= 1
-	is_invulnerable = true
-	get_tree().create_timer(INVULNERABLE_SECONDS, false).timeout.connect(func(): is_invulnerable = false)
+	_become_invulnerable(INVULNERABLE_SECONDS)
 	emit_signal("lives_changed", current_lives)
 	
 	if current_lives <= 0:
@@ -112,3 +116,30 @@ func die():
 	collision_layer = 0
 	collision_mask = 0
 	died.emit()
+
+## Brings the player back where they died with one life, blinking while invulnerable.
+func revive():
+	is_dead = false
+	is_hit = false
+	direction = Vector2.ZERO
+	current_lives = 1
+	collision_layer = _collision_layer
+	collision_mask = _collision_mask
+	set_physics_process(true)
+	set_process(true)
+	anim.play("idle")
+	_become_invulnerable(REVIVE_INVULNERABLE_SECONDS)
+	var blink := create_tween().set_loops(roundi(REVIVE_INVULNERABLE_SECONDS / 0.2))
+	blink.tween_property(anim, "modulate:a", 0.3, 0.1)
+	blink.tween_property(anim, "modulate:a", 1.0, 0.1)
+	lives_changed.emit(current_lives)
+
+# Only the latest timer ends invulnerability, so the killing hit's timer can't cut a revive short.
+func _become_invulnerable(seconds: float):
+	is_invulnerable = true
+	var timer := get_tree().create_timer(seconds, false)
+	_invulnerability_timer = timer
+	timer.timeout.connect(func():
+		if _invulnerability_timer == timer:
+			is_invulnerable = false
+	)

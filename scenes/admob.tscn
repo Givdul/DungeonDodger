@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://addons/AdmobPlugin/Admob.gd" id="1_admob"]
+
+[node name="Admob" type="Node"]
+script = ExtResource("1_admob")
+ios_debug_application_id = "ca-app-pub-3940256099942544~1458002511"
+att_enabled = true
+att_text = "Your data is used to show you more relevant ads."
+remove_interstitial_ads_after_displayed = true
