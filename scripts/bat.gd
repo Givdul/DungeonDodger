@@ -40,6 +40,12 @@ func _physics_process(delta):
 	if not player or not player.is_inside_tree():
 		return
 
+	if player.is_dead:
+		timer.stop()
+		state = "locking"
+		anim.play("idle_right" if anim.animation.ends_with("right") else "idle_left")
+		return
+
 	# Polled rather than body_entered: contact that starts during the player's hit
 	# animation never enters again, so a resting enemy would stop hurting.
 	if overlaps_body(player):
