@@ -25,6 +25,25 @@ const RIGHT_WALL_TILE := Vector2i(5, 9)
 const FLOOR_TILE := Vector2i(7, 11)
 const FLOOR_DETAIL_TILES: Array[Vector2i] = [Vector2i(8, 11), Vector2i(8, 12), Vector2i(9, 12)]
 const FLOOR_DETAIL_CHANCE := 0.08
+# The hand-made floor of the old fixed room, under the player and the high score,
+# so a run opens on it before the corridor takes over. One string per row from
+# START_FLOOR_FIRST_ROW, one character per floor column.
+const START_FLOOR_FIRST_ROW := -5
+const START_FLOOR: Array[String] = [
+	"......",
+	"......",
+	".a..b.",
+	"......",
+	"......",
+	"..aa..",
+	"cccccc",
+	"cccccc",
+	"....a.",
+	".b....",
+	"......",
+	"......",
+]
+const START_FLOOR_TILES := {".": FLOOR_TILE, "a": Vector2i(8, 11), "b": Vector2i(8, 12), "c": Vector2i(9, 12)}
 
 const PATH_TURN_CHANCE := 0.25
 # Rows below the player's start with no hazards, so a run opens gently.
@@ -50,7 +69,7 @@ const HAZARD_EDGE_GRACE := 3.0
 
 const COIN_RUN_LENGTH := Vector2i(3, 5)
 const ROWS_BETWEEN_COIN_RUNS := Vector2i(6, 12)
-# Keeps the first coins out from under the player at the start of a run.
+# Rows past the start floor before the first coins, so they stay off the high score.
 const ROWS_BEFORE_FIRST_COIN_RUN := 3
 
 var _top_row: int
@@ -74,7 +93,7 @@ func start(view: Rect2) -> void:
 	_first_hazard_row = start_row + ROWS_BEFORE_HAZARDS
 	_first_plant_row = start_row + ROWS_BEFORE_PLANTS
 	_first_item_row = start_row + ROWS_BEFORE_ITEMS
-	_rows_until_coin_run += start_row - _top_row
+	_rows_until_coin_run += START_FLOOR_FIRST_ROW + START_FLOOR.size() - _top_row
 	follow(view)
 
 
@@ -107,10 +126,7 @@ func _build_row(row: int) -> void:
 	set_cell(Vector2i(LEFT_WALL_COLUMN, row), 0, LEFT_WALL_TILE)
 	set_cell(Vector2i(RIGHT_WALL_COLUMN, row), 0, RIGHT_WALL_TILE)
 	for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
-		var tile := FLOOR_TILE
-		if randf() < FLOOR_DETAIL_CHANCE:
-			tile = FLOOR_DETAIL_TILES.pick_random()
-		set_cell(Vector2i(column, row), 0, tile)
+		set_cell(Vector2i(column, row), 0, _floor_tile(column, row))
 
 	var path := _advance_path()
 	var depth := row - _first_hazard_row
@@ -137,6 +153,15 @@ func _build_row(row: int) -> void:
 		var key := key_scene.instantiate()
 		key.position = map_to_local(Vector2i(_path_column + 1 - _coin_path_side, row))
 		add_child(key)
+
+
+func _floor_tile(column: int, row: int) -> Vector2i:
+	var start_floor_row := row - START_FLOOR_FIRST_ROW
+	if start_floor_row >= 0 and start_floor_row < START_FLOOR.size():
+		return START_FLOOR_TILES[START_FLOOR[start_floor_row][column - FIRST_FLOOR_COLUMN]]
+	if randf() < FLOOR_DETAIL_CHANCE:
+		return FLOOR_DETAIL_TILES.pick_random()
+	return FLOOR_TILE
 
 
 # Returns the columns this row keeps clear. When the path shifts a column, the row
