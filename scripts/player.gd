@@ -10,6 +10,7 @@ signal roll_ready_changed(is_ready: bool)
 @onready var anim = $AnimatedSprite2D
 @onready var audio_stream_player_2d = $hit_sound
 @onready var death_sound = $death_sound
+@onready var anim_rest_position: Vector2 = anim.position
 
 
 @export var max_lives := 3
@@ -33,6 +34,9 @@ const ROLL_SPEED := SPEED + ROLL_EXTRA_DISTANCE / ROLL_SECONDS
 const ROLL_COOLDOWN_SECONDS := 1.5
 const ROLL_SQUASH := Vector2(1.25, 0.75)
 const ROLL_ANIMATION_SPEED := 2.0
+# The squash scales about the sprite's center, so this keeps its feet on the floor.
+const ROLL_SQUASH_SHIFT := Vector2(0, 2.0)
+const RUN_ANIMATIONS := {Vector2.UP: &"run_up", Vector2.DOWN: &"run_down", Vector2.LEFT: &"run_left", Vector2.RIGHT: &"run_right"}
 var is_dead := false
 var is_falling := false
 var is_hit := false  # Flag to know if hit anim is playing
@@ -62,22 +66,22 @@ func _physics_process(delta):
 	if Input.is_action_just_pressed("move_up"):
 		direction = Vector2.UP
 		last_direction = Vector2.UP
-		if not is_hit:
+		if not (is_hit or is_rolling):
 			anim.play("run_up")
 	elif Input.is_action_just_pressed("move_down"):
 		direction = Vector2.DOWN
 		last_direction = Vector2.DOWN
-		if not is_hit:
+		if not (is_hit or is_rolling):
 			anim.play("run_down")
 	elif Input.is_action_just_pressed("move_left"):
 		direction = Vector2.LEFT
 		last_direction = Vector2.LEFT
-		if not is_hit:
+		if not (is_hit or is_rolling):
 			anim.play("run_left")
 	elif Input.is_action_just_pressed("move_right"):
 		direction = Vector2.RIGHT
 		last_direction = Vector2.RIGHT
-		if not is_hit:
+		if not (is_hit or is_rolling):
 			anim.play("run_right")
 
 	# MobileInputs presses dodge with the move that asked for it, so the roll goes the new way.
@@ -90,6 +94,9 @@ func _physics_process(delta):
 		roll_seconds_left -= delta
 		if roll_seconds_left <= 0:
 			_end_roll()
+			# A turn during the roll waited for it to end.
+			if not is_hit:
+				anim.play(RUN_ANIMATIONS[direction])
 	else:
 		velocity = direction * SPEED
 	move_and_slide()
@@ -191,7 +198,9 @@ func roll():
 	anim.speed_scale = ROLL_ANIMATION_SPEED
 	roll_tween = create_tween()
 	roll_tween.tween_property(anim, "scale", ROLL_SQUASH, ROLL_SECONDS / 2)
+	roll_tween.parallel().tween_property(anim, "position", anim_rest_position + ROLL_SQUASH_SHIFT, ROLL_SECONDS / 2)
 	roll_tween.tween_property(anim, "scale", Vector2.ONE, ROLL_SECONDS / 2)
+	roll_tween.parallel().tween_property(anim, "position", anim_rest_position, ROLL_SECONDS / 2)
 
 func _end_roll():
 	is_rolling = false
@@ -200,6 +209,7 @@ func _end_roll():
 		roll_tween.kill()
 	anim.speed_scale = 1.0
 	anim.scale = Vector2.ONE
+	anim.position = anim_rest_position
 
 ## Pulls the player into the hole and plays the fall. It costs a life, and on
 ## the last one it ends the run. Otherwise the player stops and fell is emitted.
