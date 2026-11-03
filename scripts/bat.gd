@@ -14,9 +14,13 @@ var state = "locking"
 var rush_direction = Vector2.ZERO
 
 func _ready():
-	timer.wait_time = lock_time
 	timer.connect("timeout", Callable(self, "_on_lock_timeout"))
-	timer.start()
+	_start_lock_timer()
+
+# Bats that stop at the same spot on the same frame would otherwise rush in
+# lockstep for the rest of the run, looking and acting like one bat.
+func _start_lock_timer():
+	timer.start(lock_time * randf_range(0.8, 1.2))
 
 func _physics_process(delta):
 	if not is_instance_valid(player):
@@ -61,7 +65,7 @@ func _move_rush(delta):
 	
 	if game and not game.playable_area().has_point(new_pos):
 		state = "locking"
-		timer.start()
+		_start_lock_timer()
 		return
 
 
