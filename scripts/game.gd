@@ -11,6 +11,10 @@ extends Node2D
 @onready var held_key: Sprite2D = $Camera2D/Hud/ItemBox/HeldKey
 @onready var high_score_var_label = $HighScoreVarLabel
 @onready var ui = $UI
+@onready var swipe_hint: Label = $SwipeHint
+
+# The view holds still until the first swipe or key press of a run. Pausing and resuming leave it set.
+var run_started := false
 
 # Static so it survives reload_current_scene(): a restart skips the start screen.
 static var _restarting := false
@@ -67,6 +71,12 @@ func _process(_delta):
 func _physics_process(delta):
 	if player.is_dead:
 		return
+	if not run_started:
+		# The player runs first, so the swipe that sets their direction scrolls this same frame.
+		run_started = player.direction != Vector2.ZERO
+		swipe_hint.visible = not run_started
+		if not run_started:
+			return
 	camera.position.y -= scroll_speed() * delta
 	dungeon.follow(screen_rect())
 	_keep_player_in_view()
