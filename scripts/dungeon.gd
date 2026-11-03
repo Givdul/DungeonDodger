@@ -194,6 +194,19 @@ func _place_trap(cell: Vector2i) -> void:
 		_place_hazard(cell, cracked_floor)
 
 
+## A random spot of plain floor with its center between two heights, or the
+## middle of that band if there's none.
+func free_spot_between(top: float, bottom: float) -> Vector2:
+	var spots := []
+	for row in range(maxi(_row_at(top), _top_row), mini(_row_at(bottom) + 1, _next_row)):
+		for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
+			var cell := Vector2i(column, row)
+			var spot := map_to_local(cell)
+			if spot.y >= top and spot.y <= bottom and not _hazards.has(cell) and not _solids.has(cell):
+				spots.append(spot)
+	return spots.pick_random() if not spots.is_empty() else Vector2(0, (top + bottom) / 2)
+
+
 func _place_hazard(cell: Vector2i, hazard: Node2D) -> void:
 	hazard.position = map_to_local(cell)
 	add_child(hazard)
