@@ -4,7 +4,7 @@ extends CharacterBody2D
 ## something solid or runs out of time.
 
 @export var speed := 110.0
-# The level is endless downward, so a run along it may never reach anything solid.
+# The corridor has no top or bottom wall, so a run along it may never reach anything solid.
 @export var max_run_time := 3.0
 @export var pause_time := 0.7
 const FALL_SLIDE_SECONDS := 0.1
@@ -30,9 +30,9 @@ func _physics_process(delta: float) -> void:
 		player.take_damage()
 
 	# It walks on the floor, so it cracks crumbling tiles and falls into holes, even while paused.
-	var hole = game.dungeon.hazard_at(global_position)
-	if hole is Pit:
-		hole.step_on(self)
+	var hazard = game.dungeon.hazard_at(global_position)
+	if hazard is Pit:
+		hazard.step_on(self)
 		if is_dead:
 			return
 

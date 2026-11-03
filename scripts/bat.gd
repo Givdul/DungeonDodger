@@ -2,7 +2,7 @@ extends Area2D
 
 @export var speed := 150
 @export var lock_time := 1.5
-# The level is endless downward, so a rush along it may never reach a wall.
+# The corridor has no top or bottom wall, so a rush along it may never reach a wall.
 @export var max_rush_time := 1.5
 # Closest two bats' centers can get. Their bodies touch here; the wings still overlap.
 @export var bat_spacing := 14.0

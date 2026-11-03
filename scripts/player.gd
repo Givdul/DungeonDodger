@@ -102,6 +102,9 @@ func take_damage():
 	# Wait for hit animation to finish before resuming normal state
 	await anim.animation_finished
 	is_hit = false
+	# Falling or being crushed mid-hit replaces the hit animation, which still finishes this wait.
+	if is_dead:
+		return
 
 	# Resume last movement animation or idle
 	if direction == Vector2.UP:

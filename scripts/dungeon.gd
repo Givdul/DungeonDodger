@@ -115,6 +115,41 @@ func hazard_at(point: Vector2) -> Node2D:
 	return hazard if cell_rect.grow(-HAZARD_EDGE_GRACE).has_point(local) else null
 
 
+## Whether the point is on plain floor, with no hazard or solid in its cell.
+func is_free(point: Vector2) -> bool:
+	return _is_free_cell(local_to_map(to_local(point)))
+
+
+## A random spot of plain floor within a few rows of the point, in local
+## coordinates, for things that land on the floor.
+func free_spot_near(point: Vector2) -> Vector2:
+	var origin := local_to_map(point)
+	var cells := _free_cells(origin.y - 3, origin.y + 2).filter(func(cell): return cell != origin)
+	return map_to_local(cells.pick_random()) if not cells.is_empty() else point
+
+
+## The centers of plain floor cells inside the band, in global coordinates.
+func free_spots_in(band: Rect2) -> Array:
+	var cells := _free_cells(_row_at(to_local(band.position).y), _row_at(to_local(band.end).y))
+	return cells.map(func(cell): return to_global(map_to_local(cell))) \
+		.filter(func(spot): return spot.y >= band.position.y and spot.y <= band.end.y)
+
+
+# Free cells in the built rows between first_row and last_row, inclusive.
+func _free_cells(first_row: int, last_row: int) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for row in range(maxi(first_row, _next_row + 1), mini(last_row, _bottom_row) + 1):
+		for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
+			var cell := Vector2i(column, row)
+			if _is_free_cell(cell):
+				cells.append(cell)
+	return cells
+
+
+func _is_free_cell(cell: Vector2i) -> bool:
+	return not _hazards.has(cell) and not _solids.has(cell)
+
+
 func _row_at(y: float) -> int:
 	return floori(y / tile_set.tile_size.y)
 
@@ -176,7 +211,7 @@ func _advance_path() -> Array:
 func _solid_columns(row: int, path: Array) -> Array:
 	return range(FIRST_FLOOR_COLUMN + 1, LAST_FLOOR_COLUMN).filter(func(column):
 		var cell := Vector2i(column, row)
-		return column not in path and not _hazards.has(cell) and not _solids.has(cell))
+		return column not in path and _is_free_cell(cell))
 
 
 func _place_solid(scene: PackedScene, row: int, columns: Array) -> void:
@@ -187,19 +222,6 @@ func _place_solid(scene: PackedScene, row: int, columns: Array) -> void:
 	solid.position = map_to_local(cell)
 	add_child(solid)
 	_solids[cell] = solid
-
-
-## A random spot of plain floor within a few rows of the point, for things
-## that land on the floor.
-func free_spot_near(point: Vector2) -> Vector2:
-	var origin := local_to_map(point)
-	var spots := []
-	for row in range(maxi(origin.y - 3, _next_row + 1), mini(origin.y + 3, _bottom_row + 1)):
-		for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
-			var cell := Vector2i(column, row)
-			if cell != origin and not _hazards.has(cell) and not _solids.has(cell):
-				spots.append(map_to_local(cell))
-	return spots.pick_random() if not spots.is_empty() else point
 
 
 func _is_hole(cell: Vector2i) -> bool:
@@ -220,19 +242,6 @@ func _place_trap(cell: Vector2i) -> void:
 		_place_hazard(cell, cracked_floor)
 
 
-## A random spot of plain floor with its center between two heights, or the
-## middle of that band if there's none.
-func free_spot_between(top: float, bottom: float) -> Vector2:
-	var spots := []
-	for row in range(maxi(_row_at(top), _next_row + 1), mini(_row_at(bottom), _bottom_row) + 1):
-		for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
-			var cell := Vector2i(column, row)
-			var spot := map_to_local(cell)
-			if spot.y >= top and spot.y <= bottom and not _hazards.has(cell) and not _solids.has(cell):
-				spots.append(spot)
-	return spots.pick_random() if not spots.is_empty() else Vector2(0, (top + bottom) / 2)
-
-
 func _place_hazard(cell: Vector2i, hazard: Node2D) -> void:
 	hazard.position = map_to_local(cell)
 	add_child(hazard)
@@ -242,8 +251,8 @@ func _place_hazard(cell: Vector2i, hazard: Node2D) -> void:
 # Coins come in short runs along the safe path, like the lines of coins in Subway Surfers.
 func _place_coins(row: int) -> void:
 	if _coins_left_in_run == 0:
-		_rows_until_coin_run -= 1
 		if _rows_until_coin_run > 0:
+			_rows_until_coin_run -= 1
 			return
 		_coins_left_in_run = randi_range(COIN_RUN_LENGTH.x, COIN_RUN_LENGTH.y)
 		_rows_until_coin_run = randi_range(ROWS_BETWEEN_COIN_RUNS.x, ROWS_BETWEEN_COIN_RUNS.y)
