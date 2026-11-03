@@ -5,8 +5,11 @@ extends CharacterBody2D
 @onready var anim = $AnimatedSprite2D
 
 var last_facing_right := true  # Track direction for idle animation
+var is_dead := false
 
 func _physics_process(delta):
+	if is_dead:
+		return
 	if not is_instance_valid(player):
 		player = null
 		velocity = Vector2.ZERO
@@ -34,3 +37,12 @@ func _physics_process(delta):
 		else:
 			anim.play("run_left")
 			last_facing_right = false
+
+
+func die():
+	if is_dead:
+		return
+	is_dead = true
+	anim.play("death_right" if last_facing_right else "death_left")
+	await anim.animation_finished
+	queue_free()

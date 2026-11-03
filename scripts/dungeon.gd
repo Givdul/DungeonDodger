@@ -10,6 +10,7 @@ signal coin_picked_up
 @export var coin_scene: PackedScene
 @export var spikes_scene: PackedScene
 @export var pit_scene: PackedScene
+@export var bomberplant_scene: PackedScene
 
 const LEFT_WALL_COLUMN := -4
 const RIGHT_WALL_COLUMN := 3
@@ -30,6 +31,9 @@ const HAZARD_CHANCE_PER_ROW := 0.004
 const MAX_HAZARD_CHANCE := 0.45
 const CRUMBLING_PIT_SHARE := 0.3
 const SPIKES_SHARE := 0.3
+# Bomberplants are solid, so like hazards they stay off the safe path.
+const ROWS_BEFORE_PLANTS := 30
+const PLANT_CHANCE_PER_ROW := 0.05
 # Pixels in from a hazard cell's edges where the player's feet set it off, so
 # brushing a corner doesn't count.
 const HAZARD_EDGE_GRACE := 3.0
@@ -42,6 +46,7 @@ const ROWS_BEFORE_FIRST_COIN_RUN := 3
 var _top_row: int
 var _next_row: int
 var _first_hazard_row: int
+var _first_plant_row: int
 var _path_column := randi_range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN - 1)
 var _hazards: Dictionary[Vector2i, Node2D] = {}
 var _coin_path_side := 0
@@ -54,6 +59,7 @@ func start(view: Rect2) -> void:
 	_next_row = _top_row
 	var start_row := _row_at(view.get_center().y)
 	_first_hazard_row = start_row + ROWS_BEFORE_HAZARDS
+	_first_plant_row = start_row + ROWS_BEFORE_PLANTS
 	_rows_until_coin_run += start_row - _top_row
 	follow(view)
 
@@ -97,6 +103,13 @@ func _build_row(row: int) -> void:
 	for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
 		if column not in path and randf() < hazard_chance:
 			_place_hazard(Vector2i(column, row))
+	if row >= _first_plant_row and randf() < PLANT_CHANCE_PER_ROW:
+		var free_columns := range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1).filter(
+			func(column): return column not in path and not _hazards.has(Vector2i(column, row)))
+		if not free_columns.is_empty():
+			var plant := bomberplant_scene.instantiate()
+			plant.position = map_to_local(Vector2i(free_columns.pick_random(), row))
+			add_child(plant)
 	_place_coins(row)
 
 
