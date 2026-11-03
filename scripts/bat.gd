@@ -2,6 +2,8 @@ extends Area2D
 
 @export var speed := 150
 @export var lock_time := 1.5
+# The last part of the lock, when the bat flashes and marks its locked-in rush line.
+@export var windup_time := 0.5
 # The corridor has no top or bottom wall, so a rush along it may never reach a wall.
 @export var max_rush_time := 1.5
 # Closest two bats' centers can get. Their bodies touch here; the wings still overlap.
@@ -10,6 +12,7 @@ extends Area2D
 @onready var player = get_tree().get_first_node_in_group("Player")
 @onready var anim = $AnimatedSprite2D
 @onready var timer = $Timer
+@onready var marker: Line2D = $RushMarker
 
 # Reference your game node to get the playable area
 @onready var game = get_tree().get_first_node_in_group("Game")  # Add group "Game" to your main game Node2D
@@ -17,16 +20,23 @@ extends Area2D
 var state = "locking"
 var rush_direction = Vector2.ZERO
 var rush_time_left := 0.0
+var flash_tween: Tween
+var marker_tween: Tween
+
+# Same flash as a bomb's fuse, so a red blink always means "about to hurt".
+const WINDUP_FLASH := Color(4, 1, 1)
+const WINDUP_BLINK_SECONDS := 0.1
+const MARKER_FADE_SECONDS := 0.15
 
 func _ready():
 	add_to_group("Bats")
-	timer.connect("timeout", Callable(self, "_on_lock_timeout"))
+	timer.connect("timeout", Callable(self, "_on_timer_timeout"))
 	_start_lock_timer()
 
 # Bats that stop at the same spot on the same frame would otherwise rush in
 # lockstep for the rest of the run, looking and acting like one bat.
 func _start_lock_timer():
-	timer.start(lock_time * randf_range(0.8, 1.2))
+	timer.start(lock_time * randf_range(0.8, 1.2) - windup_time)
 
 func _physics_process(delta):
 	if state == "dead":
@@ -42,6 +52,7 @@ func _physics_process(delta):
 
 	if player.is_dead:
 		timer.stop()
+		_clear_telegraph()
 		state = "locking"
 		anim.play("idle_right" if anim.animation.ends_with("right") else "idle_left")
 		return
@@ -64,11 +75,60 @@ func _face_player():
 	else:
 		anim.play("idle_left")
 
-func _on_lock_timeout():
+func _on_timer_timeout():
+	match state:
+		"locking":
+			_start_windup()
+		"winding_up":
+			_start_rush()
+
+func _start_windup():
+	state = "winding_up"
+	rush_direction = (player.global_position - global_position).normalized()
+	_face_player()
+	_show_marker()
+	flash_tween = create_tween().set_loops()
+	flash_tween.tween_property(anim, "modulate", WINDUP_FLASH, WINDUP_BLINK_SECONDS / 2)
+	flash_tween.tween_property(anim, "modulate", Color.WHITE, WINDUP_BLINK_SECONDS / 2)
+	timer.start(windup_time)
+
+# The marker stays where it was drawn (top_level), so it marks the line, not the bat.
+func _show_marker():
+	if marker_tween:
+		marker_tween.kill()
+	marker.global_position = global_position
+	marker.points = [Vector2.ZERO, rush_direction * _rush_length()]
+	marker.modulate.a = 1.0
+	marker.show()
+
+# Ends where the rush would stop at a wall, so the marker never crosses one.
+func _rush_length() -> float:
+	var length := speed * max_rush_time
+	if game and rush_direction.x != 0:
+		var area: Rect2 = game.playable_area()
+		var wall_x := area.end.x if rush_direction.x > 0 else area.position.x
+		length = minf(length, (wall_x - position.x) / rush_direction.x)
+	return length
+
+func _stop_flash():
+	if flash_tween:
+		flash_tween.kill()
+	anim.modulate = Color.WHITE
+
+func _clear_telegraph():
+	_stop_flash()
+	if marker_tween:
+		marker_tween.kill()
+	marker.hide()
+
+func _start_rush():
+	_stop_flash()
+	marker_tween = create_tween()
+	marker_tween.tween_property(marker, "modulate:a", 0.0, MARKER_FADE_SECONDS)
+	marker_tween.tween_callback(marker.hide)
+
 	state = "rushing"
 	rush_time_left = max_rush_time
-	rush_direction = (player.global_position - global_position).normalized()
-	
 	if rush_direction.x > 0:
 		anim.play("run_right")
 	else:
@@ -103,6 +163,7 @@ func die():
 		return
 	state = "dead"
 	timer.stop()
+	_clear_telegraph()
 	anim.play("death_right" if anim.animation.ends_with("right") else "death_left")
 	await anim.animation_finished
 	queue_free()
