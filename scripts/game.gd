@@ -127,10 +127,10 @@ func _on_player_died():
 	ui.show_game_over(point_count, ScoreManager.high_score, is_new_best)
 
 
-# Back on plain floor near the middle of the view, clear of the scroll edge.
+# Back on the safe path near the middle of the view, clear of the scroll edge.
 func _on_player_fell():
 	var middle: Vector2 = dungeon.to_local(floor_band().get_center())
-	player.global_position = dungeon.to_global(dungeon.free_spot_near(middle))
+	player.global_position = dungeon.to_global(dungeon.path_spot_near(middle))
 	player.start_invulnerability()
 
 
