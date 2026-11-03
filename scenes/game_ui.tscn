@@ -99,6 +99,21 @@ size_flags_horizontal = 4
 focus_mode = 0
 text = "RESUME"
 
+[node name="CountdownLabel" type="Label" parent="Root" unique_id=1928374650]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 48
+text = "3"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="GameOverScreen" type="VBoxContainer" parent="Root" unique_id=869143772]
 unique_name_in_owner = true
 layout_mode = 1
