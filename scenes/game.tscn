@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_4l5gb"]
 [ext_resource type="Script" path="res://scripts/dungeon.gd" id="2_dngn"]
+[ext_resource type="PackedScene" path="res://scenes/spikes.tscn" id="3_spikes"]
+[ext_resource type="PackedScene" path="res://scenes/pit.tscn" id="3_pit"]
 [ext_resource type="PackedScene" uid="uid://casiunlo1o1k1" path="res://scenes/player.tscn" id="1_hyu2l"]
 [ext_resource type="Texture2D" uid="uid://brp1bq0eaupex" path="res://assets/sprites/Dungeon_Tileset.png" id="2_s7dxe"]
 [ext_resource type="PackedScene" uid="uid://qkophn3d8224" path="res://scenes/point.tscn" id="3_ye4wu"]
@@ -218,6 +220,8 @@ vertical_alignment = 1
 tile_set = SubResource("TileSet_0ido1")
 script = ExtResource("2_dngn")
 coin_scene = ExtResource("3_ye4wu")
+spikes_scene = ExtResource("3_spikes")
+pit_scene = ExtResource("3_pit")
 
 [node name="Player" parent="." groups=["Player"] instance=ExtResource("1_hyu2l")]
 z_index = 5

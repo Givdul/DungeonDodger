@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://cwp2a2t87f0xh" path="res://assets/sprites/Char_Sprites/char_hit_right_anim_strip_3.png" id="5_k0a41"]
 [ext_resource type="Texture2D" uid="uid://dhmbp3mrkbsb5" path="res://assets/sprites/Char_Sprites/char_run_up_anim_strip_6.png" id="6_pekt4"]
 [ext_resource type="Texture2D" uid="uid://bqwvrc7rs7p7h" path="res://assets/sprites/Char_Sprites/char_hit_up_anim_strip_3.png" id="6_vpc67"]
+[ext_resource type="Texture2D" uid="uid://nlth8vyye4x3" path="res://assets/sprites/Char_Sprites/char_falling_all_dir_anim_strip_6.png" id="14_fall"]
 [ext_resource type="AudioStream" uid="uid://bfcvkup7grtum" path="res://assets/sounds/hit-3.wav" id="12_aqy2v"]
 [ext_resource type="AudioStream" uid="uid://bivk6tfbp7d6f" path="res://assets/sounds/lose-10.wav" id="13_dc4cf"]
 
@@ -222,8 +223,55 @@ region = Rect2(64, 0, 16, 16)
 atlas = ExtResource("6_pekt4")
 region = Rect2(80, 0, 16, 16)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_fall0"]
+atlas = ExtResource("14_fall")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fall1"]
+atlas = ExtResource("14_fall")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fall2"]
+atlas = ExtResource("14_fall")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fall3"]
+atlas = ExtResource("14_fall")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fall4"]
+atlas = ExtResource("14_fall")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fall5"]
+atlas = ExtResource("14_fall")
+region = Rect2(80, 0, 16, 16)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_ly6yv"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fall0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fall1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fall2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fall3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fall4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fall5")
+}],
+"loop": false,
+"name": &"fall",
+"speed": 10.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_lox3b")
