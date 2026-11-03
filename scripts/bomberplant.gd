@@ -1,6 +1,6 @@
 extends StaticBody2D
 ## A plant rooted in the floor. It's solid, and while the player is in range it
-## lobs bombs onto the floor in the upper part of the screen.
+## lobs bombs onto a random spot of floor on screen.
 
 @export var bomb_scene: PackedScene
 @export var fire_range := 110.0
@@ -9,11 +9,11 @@ extends StaticBody2D
 # Frame of the attack animation where the bomb leaves the plant.
 const LAUNCH_FRAME := 7
 const MOUTH_OFFSET := Vector2(0, -12)
-# Bombs land between this far below the view top, plus however far the floor
-# scrolls before they blow, and this far down the view. So they explode below
-# the hearts and score, where the player can still lead enemies onto them.
+# Bombs land anywhere on screen that's at least this far below the view top once
+# the floor has scrolled until they blow. So they explode below the hearts and
+# score, where the player can still lead enemies onto them.
 const LANDING_TOP_MARGIN := 48.0
-const LANDING_LOWEST := 0.6
+const LANDING_BOTTOM_MARGIN := 8.0
 
 @onready var player = get_tree().get_first_node_in_group("Player")
 @onready var game = get_tree().get_first_node_in_group("Game")
@@ -48,6 +48,4 @@ func _on_frame_changed() -> void:
 func _landing_spot(seconds_to_explode: float) -> Vector2:
 	var view: Rect2 = game.view_rect()
 	var top: float = view.position.y + game.scroll_speed() * seconds_to_explode + LANDING_TOP_MARGIN
-	# At top scroll speed the top limit passes the lowest one, so keep two rows of room.
-	var bottom := maxf(view.position.y + view.size.y * LANDING_LOWEST, top + 32)
-	return get_parent().free_spot_between(top, bottom)
+	return get_parent().free_spot_between(top, view.end.y - LANDING_BOTTOM_MARGIN)
