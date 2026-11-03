@@ -71,6 +71,9 @@ func _play(run_seed: int, skill: String, max_seconds: float) -> Dictionary:
 	# before the death animation ends also keeps the run from saving a high score.
 	await get_tree().process_frame
 	game.free()
+	# A press made on the last frame would still read as just pressed in the next run's first one.
+	await get_tree().physics_frame
+	await get_tree().process_frame
 	return result
 
 

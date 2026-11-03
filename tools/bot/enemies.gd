@@ -15,9 +15,29 @@ static func chases(enemy: Node) -> bool:
 	return enemy.is_in_group("Phantoms")
 
 
-## Whether it's a bat holding still before it winds up to charge in a straight line.
+## Whether it's holding still before it charges in a straight line: a bat before
+## it winds up, or a spinner between runs.
 static func waits_to_rush(enemy: Node) -> bool:
-	return enemy.is_in_group("Bats") and enemy.state == "locking"
+	if enemy.is_in_group("Bats"):
+		return enemy.state == "locking"
+	return is_spinner(enemy) and enemy.anim.animation == &"idle"
+
+
+## About how long it holds still before it charges.
+static func wait_seconds(enemy: Node) -> float:
+	return enemy.pause_time if is_spinner(enemy) else enemy.lock_time
+
+
+## Which way it charges from from at a player at target: a spinner only goes across or along the corridor.
+static func rush_direction(enemy: Node, from: Vector2, target: Vector2) -> Vector2:
+	var to_target := target - from
+	if not is_spinner(enemy):
+		return to_target.normalized()
+	return Vector2(signf(to_target.x), 0) if absf(to_target.x) > absf(to_target.y) else Vector2(0, signf(to_target.y))
+
+
+static func is_spinner(enemy: Node) -> bool:
+	return kind(enemy) == "spinner"
 
 
 ## Whether it's a bat flashing before a rush along its marked line.
@@ -25,7 +45,8 @@ static func winds_up(enemy: Node) -> bool:
 	return enemy.is_in_group("Bats") and enemy.state == "winding_up"
 
 
-## Which way a chaser at from heads for a player at target, as phantom.gd's aim_point() works it out.
+## Which way a chaser whose origin is at from heads for a player whose feet are at
+## target, as phantom.gd's aim_point() works it out.
 static func chase_direction(enemy: Node, from: Vector2, target: Vector2) -> Vector2:
 	var to_target := target - from
 	var flank_offset := clampf(to_target.length() - enemy.FLANK_END_DISTANCE, 0.0, enemy.FLANK_WIDTH)

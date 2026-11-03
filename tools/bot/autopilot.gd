@@ -231,18 +231,20 @@ func _observe() -> void:
 			velocity = (center - _enemy_centers[enemy]) / (_now - _enemy_centers_time)
 		centers[enemy] = center
 		# A waiting rusher charges at the player once it's waited as long as they usually do.
-		# Once it winds up, its marker shows when and which way it goes.
+		# Once a bat winds up, its marker shows when and which way it goes.
 		var rushes_in := INF
 		var rush_direction := Vector2.ZERO
 		if Enemies.waits_to_rush(enemy):
 			waiting_since[enemy] = _enemies_waiting_since.get(enemy, _now)
-			rushes_in = maxf(waiting_since[enemy] + enemy.lock_time - _now, 0.0)
+			rushes_in = maxf(waiting_since[enemy] + Enemies.wait_seconds(enemy) - _now, 0.0)
+			velocity = Vector2.ZERO
 		elif Enemies.winds_up(enemy):
 			rushes_in = enemy.timer.time_left
 			rush_direction = enemy.rush_direction
+			velocity = Vector2.ZERO
 		_enemies.append({node = enemy, center = center, velocity = velocity, reach = _radius(shape) + body_radius,
-			chases = Enemies.chases(enemy), speed = enemy.get("speed"), rushes_in = rushes_in,
-			rush_direction = rush_direction})
+			origin_offset = enemy.global_position - center, chases = Enemies.chases(enemy), speed = enemy.get("speed"),
+			rushes_in = rushes_in, rush_direction = rush_direction})
 	_enemy_centers = centers
 	_enemies_waiting_since = waiting_since
 	_enemy_centers_time = _now
@@ -262,7 +264,7 @@ func _observe() -> void:
 		if child is StaticBody2D:
 			_solids.append(child.global_position)
 		elif child.scene_file_path == COIN_SCENE and not child.picked_up_already:
-			_coins.append(child.global_position)
+			_coins.append(child.get_node("CollisionShape2D").global_position)
 
 
 func _radius(shape: CollisionShape2D) -> float:
@@ -321,10 +323,11 @@ func _add_costs(sim: Sim) -> void:
 		# Chasers turn after the player, and rushers set off along their marked line, or else at
 		# where the player is when they charge. The rest keep going the way they're seen moving.
 		if enemy.chases:
-			sim.enemy_velocities[i] = Enemies.chase_direction(enemy.node, sim.enemy_centers[i], body) * enemy.speed
+			var origin: Vector2 = sim.enemy_centers[i] + enemy.origin_offset
+			sim.enemy_velocities[i] = Enemies.chase_direction(enemy.node, origin, sim.position) * enemy.speed
 		elif sim.time >= enemy.rushes_in and sim.enemy_velocities[i] == Vector2.ZERO:
 			var rush_direction: Vector2 = enemy.rush_direction if enemy.rush_direction \
-				else sim.enemy_centers[i].direction_to(sim.position)
+				else Enemies.rush_direction(enemy.node, sim.enemy_centers[i] + enemy.origin_offset, sim.position)
 			sim.enemy_velocities[i] = rush_direction * enemy.speed
 		sim.enemy_centers[i] += sim.enemy_velocities[i] * _frame_seconds
 		var gap: float = body.distance_to(sim.enemy_centers[i]) - enemy.reach

@@ -38,6 +38,9 @@ func _physics_process(delta: float) -> void:
 	if end_cause:
 		return
 	if player.is_dead:
+		# A fall on the last life ends the run without taking that life.
+		if player.anim.animation == &"fall":
+			hits += 1
 		_end(_death_cause())
 		return
 	# The view holds still until the first move.
