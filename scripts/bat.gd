@@ -2,6 +2,8 @@ extends Area2D
 
 @export var speed := 150
 @export var lock_time := 1.5
+# The level is endless downward, so a rush along it may never reach a wall.
+@export var max_rush_time := 1.5
 # Closest two bats' centers can get. Their bodies touch here; the wings still overlap.
 @export var bat_spacing := 14.0
 
@@ -14,6 +16,7 @@ extends Area2D
 
 var state = "locking"
 var rush_direction = Vector2.ZERO
+var rush_time_left := 0.0
 
 func _ready():
 	add_to_group("Bats")
@@ -55,6 +58,7 @@ func _face_player():
 
 func _on_lock_timeout():
 	state = "rushing"
+	rush_time_left = max_rush_time
 	rush_direction = (player.global_position - global_position).normalized()
 	
 	if rush_direction.x > 0:
@@ -66,8 +70,9 @@ func _move_rush(delta):
 	# Calculate new position
 	var new_pos = position + rush_direction * speed * delta
 	
-	var hits_wall = game and not game.playable_area().has_point(new_pos)
-	if hits_wall or _bumps_bat(new_pos):
+	rush_time_left -= delta
+	var hits_wall = game and not game.is_between_walls(new_pos.x)
+	if hits_wall or rush_time_left <= 0 or _bumps_bat(new_pos):
 		state = "locking"
 		_start_lock_timer()
 		return
