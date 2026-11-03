@@ -53,6 +53,8 @@ func _fit_to_screen() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	root.size = viewport_size / UI_SCALE
 	# The game puts the room's top wall, where the hearts and score sit, at the top of the safe area.
+	# Anything placed against the screen's edges belongs in HudArea, or it drifts out of line
+	# with the HUD on phones with a notch or home indicator.
 	var safe := SafeArea.in_viewport(get_viewport())
 	hud_area.offset_left = safe.position.x / UI_SCALE
 	hud_area.offset_top = safe.position.y / UI_SCALE

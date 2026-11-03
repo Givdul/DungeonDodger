@@ -1,18 +1,23 @@
 extends Node
 # Script name: mobile_inputs.gd
 
-var swipe_start: Vector2 = Vector2.ZERO
+# Keyed by touch index, so a second finger on the screen can't turn the first
+# finger's small movements into a swipe.
+var swipe_starts: Dictionary[int, Vector2] = {}
 var minimum_drag: int    = 50
 
 func _input(event):
-	if event is InputEventScreenTouch and event.pressed:
-		swipe_start = event.position
-	elif event is InputEventScreenDrag:
-		var swipe: Vector2 = event.position - swipe_start
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			swipe_starts[event.index] = event.position
+		else:
+			swipe_starts.erase(event.index)
+	elif event is InputEventScreenDrag and swipe_starts.has(event.index):
+		var swipe: Vector2 = event.position - swipe_starts[event.index]
 		if swipe.length() >= minimum_drag:
 			_press_swipe_action(swipe)
 			# Re-anchor so one continuous drag can chain turns without lifting.
-			swipe_start = event.position
+			swipe_starts[event.index] = event.position
 
 func _press_swipe_action(swipe: Vector2) -> void:
 	var action: StringName

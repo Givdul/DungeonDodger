@@ -68,79 +68,6 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.6)
 
-[node name="StartScreen" type="Control" parent="Root" unique_id=1214554828]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="PlayButton" type="Button" parent="Root/StartScreen" unique_id=753055459]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-focus_mode = 0
-flat = true
-
-[node name="Content" type="VBoxContainer" parent="Root/StartScreen" unique_id=1569685521]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -80.0
-offset_top = -50.0
-offset_right = 80.0
-offset_bottom = 50.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="TitleLabel" type="Label" parent="Root/StartScreen/Content" unique_id=409441311]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "DUNGEON
-DODGER"
-horizontal_alignment = 1
-
-[node name="StartBestLabel" type="Label" parent="Root/StartScreen/Content" unique_id=1951798042]
-unique_name_in_owner = true
-layout_mode = 2
-text = "BEST 0"
-horizontal_alignment = 1
-
-[node name="TapLabel" type="Label" parent="Root/StartScreen/Content" unique_id=599503598]
-layout_mode = 2
-text = "TAP TO PLAY"
-horizontal_alignment = 1
-
-[node name="CreditsButton" type="Button" parent="Root/StartScreen" unique_id=814528532]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -40.0
-offset_top = -60.0
-offset_right = 40.0
-offset_bottom = -46.0
-grow_horizontal = 2
-grow_vertical = 0
-focus_mode = 0
-text = "CREDITS"
-
 [node name="PauseScreen" type="VBoxContainer" parent="Root" unique_id=1666705888]
 unique_name_in_owner = true
 layout_mode = 1
@@ -227,7 +154,90 @@ size_flags_horizontal = 4
 focus_mode = 0
 text = "RESTART"
 
-[node name="CreditsScreen" type="VBoxContainer" parent="Root" unique_id=1588344637]
+[node name="HudArea" type="Control" parent="Root" unique_id=1406385117]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="StartScreen" type="Control" parent="Root/HudArea" unique_id=1214554828]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlayButton" type="Button" parent="Root/HudArea/StartScreen" unique_id=753055459]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+flat = true
+
+[node name="Content" type="VBoxContainer" parent="Root/HudArea/StartScreen" unique_id=1569685521]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -50.0
+offset_right = 80.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Root/HudArea/StartScreen/Content" unique_id=409441311]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "DUNGEON
+DODGER"
+horizontal_alignment = 1
+
+[node name="StartBestLabel" type="Label" parent="Root/HudArea/StartScreen/Content" unique_id=1951798042]
+unique_name_in_owner = true
+layout_mode = 2
+text = "BEST 0"
+horizontal_alignment = 1
+
+[node name="TapLabel" type="Label" parent="Root/HudArea/StartScreen/Content" unique_id=599503598]
+layout_mode = 2
+text = "TAP TO PLAY"
+horizontal_alignment = 1
+
+[node name="CreditsButton" type="Button" parent="Root/HudArea/StartScreen" unique_id=814528532]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -60.0
+offset_right = 40.0
+offset_bottom = -46.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+text = "CREDITS"
+
+[node name="CreditsScreen" type="VBoxContainer" parent="Root/HudArea" unique_id=1588344637]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -241,39 +251,29 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="CreditsLabel" type="Label" parent="Root/CreditsScreen" unique_id=893549440]
+[node name="CreditsLabel" type="Label" parent="Root/HudArea/CreditsScreen" unique_id=893549440]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "CREDITS"
 horizontal_alignment = 1
 
-[node name="CreditsScroll" type="ScrollContainer" parent="Root/CreditsScreen" unique_id=1862566376]
+[node name="CreditsScroll" type="ScrollContainer" parent="Root/HudArea/CreditsScreen" unique_id=1862566376]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="CreditsText" type="Label" parent="Root/CreditsScreen/CreditsScroll" unique_id=1663665611]
+[node name="CreditsText" type="Label" parent="Root/HudArea/CreditsScreen/CreditsScroll" unique_id=1663665611]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 autowrap_mode = 3
 
-[node name="BackButton" type="Button" parent="Root/CreditsScreen" unique_id=1817865589]
+[node name="BackButton" type="Button" parent="Root/HudArea/CreditsScreen" unique_id=1817865589]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 focus_mode = 0
 text = "BACK"
-
-[node name="HudArea" type="Control" parent="Root" unique_id=1406385117]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
 
 [node name="PauseButton" type="Button" parent="Root/HudArea" unique_id=896366197]
 unique_name_in_owner = true
