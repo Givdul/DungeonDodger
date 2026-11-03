@@ -7,8 +7,11 @@ extends CharacterBody2D
 # The level is endless downward, so a run along it may never reach anything solid.
 @export var max_run_time := 3.0
 @export var pause_time := 0.7
+const FALL_SLIDE_SECONDS := 0.1
+const FALL_SECONDS := 0.5
 
 @onready var player = get_tree().get_first_node_in_group("Player")
+@onready var game = get_tree().get_first_node_in_group("Game")
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
 
 var is_dead := false
@@ -34,6 +37,10 @@ func _physics_process(delta: float) -> void:
 
 	_run_time_left -= delta
 	var crashed := move_and_collide(_run_direction * speed * delta) != null
+	var hole = game.dungeon.hazard_at(global_position)
+	if hole is Pit and hole.is_open():
+		_fall_into(hole.global_position)
+		return
 	if crashed or _run_time_left <= 0:
 		_run_direction = Vector2.ZERO
 		_pause_left = pause_time
@@ -48,6 +55,16 @@ func _start_run() -> void:
 		_run_direction = Vector2(0, signf(to_player.y))
 	_run_time_left = max_run_time
 	anim.play(&"run")
+
+
+# The spinner has no fall animation, so it slides into the hole and shrinks into the dark.
+func _fall_into(hole_center: Vector2) -> void:
+	is_dead = true
+	var tween := create_tween()
+	tween.tween_property(self, "global_position", hole_center, FALL_SLIDE_SECONDS)
+	tween.tween_property(self, "scale", Vector2.ZERO, FALL_SECONDS).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.parallel().tween_property(self, "modulate", Color.BLACK, FALL_SECONDS)
+	tween.tween_callback(queue_free)
 
 
 func die() -> void:

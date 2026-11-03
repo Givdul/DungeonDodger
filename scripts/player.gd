@@ -17,6 +17,9 @@ var last_direction := Vector2.DOWN  # Default facing down
 const SPEED := 130
 # Enemies deal damage on every frame of contact, so this is what spaces hits apart.
 const INVULNERABLE_SECONDS := 1.0
+const FALL_SLIDE_SECONDS := 0.12
+# The fall strip shrinks toward the bottom of its frame, this far above the feet.
+const FALL_SPRITE_RISE := 2.0
 var is_dead := false
 var is_hit := false  # Flag to know if hit anim is playing
 var is_invulnerable := false
@@ -111,6 +114,14 @@ func take_damage():
 		anim.play("run_right")
 	else:
 		anim.play("idle")
+
+## Pulls the player into the hole and plays the fall.
+func fall_into(hole_center: Vector2):
+	if is_dead:
+		return
+	var feet := hole_center + Vector2(0, FALL_SPRITE_RISE)
+	create_tween().tween_property(self, "global_position", feet, FALL_SLIDE_SECONDS)
+	die(&"fall")
 
 func die(animation := &"death"):
 	if is_dead:

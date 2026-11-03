@@ -149,7 +149,7 @@ func get_random_point_away_from_player(distance) -> Vector2:
 		var y = randf_range(rect_min.y, rect_max.y)
 		var spawn_pos = Vector2(x, y)
 
-		if spawn_pos.distance_to(player.global_position) > distance:
+		if spawn_pos.distance_to(player.global_position) > distance and dungeon.hazard_at(spawn_pos) == null:
 			return spawn_pos
 
 	# fallback position if none found after attempts

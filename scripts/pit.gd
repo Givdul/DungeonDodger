@@ -1,3 +1,4 @@
+class_name Pit
 extends AnimatedSprite2D
 ## A hole in the floor. A crumbling one starts as cracked floor and collapses
 ## shortly after the player first steps on it.
@@ -11,10 +12,14 @@ func _ready() -> void:
 
 
 func step_on(player) -> void:
-	if frame == _last_frame():
-		player.die(&"fall")
+	if is_open():
+		player.fall_into(global_position)
 	elif not is_playing():
 		play()
+
+
+func is_open() -> bool:
+	return frame == _last_frame()
 
 
 func _last_frame() -> int:
