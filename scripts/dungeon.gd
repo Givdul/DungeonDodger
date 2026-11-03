@@ -136,7 +136,7 @@ func free_spot_near(point: Vector2) -> Vector2:
 ## coordinates, so whoever is put there can always get through.
 func path_spot_near(point: Vector2) -> Vector2:
 	var origin := local_to_map(point)
-	var cells := _free_cells(origin.y - 3, origin.y + 2).filter(func(cell): return cell.x in _path_columns[cell.y])
+	var cells := _free_cells(origin.y - 3, origin.y + 2).filter(func(cell): return cell.x in _path_columns.get(cell.y, []))
 	return map_to_local(cells.pick_random()) if not cells.is_empty() else point
 
 
