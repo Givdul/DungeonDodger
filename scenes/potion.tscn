@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/potion.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/Props_Items_(animated)/health_potion_item.png" id="2_potion"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_potion"]
+radius = 5.0
+
+[node name="Potion" type="Area2D"]
+z_index = 7
+z_as_relative = false
+scale = Vector2(1.4, 1.4)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_potion")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_potion")

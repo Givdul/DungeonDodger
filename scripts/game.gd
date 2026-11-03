@@ -8,6 +8,7 @@ extends Node2D
 @onready var dungeon = $Dungeon
 @export var debug := false
 @onready var score_label = $Camera2D/Hud/ScoreLabel
+@onready var held_key: Sprite2D = $Camera2D/Hud/ItemBox/HeldKey
 @onready var high_score_var_label = $HighScoreVarLabel
 @onready var ui = $UI
 
@@ -49,6 +50,7 @@ func _ready():
 
 	dungeon.coin_picked_up.connect(_on_point_picked_up)
 	player.died.connect(_on_player_died)
+	player.key_changed.connect(held_key.set_visible)
 	ui.restart_requested.connect(_restart)
 	if _restarting:
 		_restarting = false

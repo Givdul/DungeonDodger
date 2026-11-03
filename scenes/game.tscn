@@ -6,6 +6,10 @@
 [ext_resource type="PackedScene" path="res://scenes/pit.tscn" id="3_pit"]
 [ext_resource type="PackedScene" path="res://scenes/bomberplant.tscn" id="3_plant"]
 [ext_resource type="PackedScene" path="res://scenes/spinner.tscn" id="3_spinner"]
+[ext_resource type="PackedScene" path="res://scenes/chest.tscn" id="3_chest"]
+[ext_resource type="PackedScene" path="res://scenes/key.tscn" id="3_key"]
+[ext_resource type="Texture2D" path="res://assets/sprites/Hud_Ui/item_box_hud.png" id="3_itembox"]
+[ext_resource type="Texture2D" path="res://assets/sprites/Props_Items_(animated)/key_item_anim_strip_6.png" id="3_keytex"]
 [ext_resource type="PackedScene" uid="uid://casiunlo1o1k1" path="res://scenes/player.tscn" id="1_hyu2l"]
 [ext_resource type="Texture2D" uid="uid://brp1bq0eaupex" path="res://assets/sprites/Dungeon_Tileset.png" id="2_s7dxe"]
 [ext_resource type="PackedScene" uid="uid://qkophn3d8224" path="res://scenes/point.tscn" id="3_ye4wu"]
@@ -226,6 +230,8 @@ coin_scene = ExtResource("3_ye4wu")
 spikes_scene = ExtResource("3_spikes")
 pit_scene = ExtResource("3_pit")
 bomberplant_scene = ExtResource("3_plant")
+chest_scene = ExtResource("3_chest")
+key_scene = ExtResource("3_key")
 
 [node name="Player" parent="." groups=["Player"] instance=ExtResource("1_hyu2l")]
 z_index = 5
@@ -257,6 +263,16 @@ vertical_alignment = 1
 [node name="HealthContainer" parent="Camera2D/Hud" instance=ExtResource("8_vqtvi")]
 position = Vector2(-38, 15)
 full_icon = ExtResource("9_nd486")
+
+[node name="ItemBox" type="Sprite2D" parent="Camera2D/Hud"]
+position = Vector2(6, 15)
+texture = ExtResource("3_itembox")
+
+[node name="HeldKey" type="Sprite2D" parent="Camera2D/Hud/ItemBox"]
+visible = false
+texture = ExtResource("3_keytex")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 16)
 
 [node name="Bounds" type="Node" parent="." groups=["World"]]
 
