@@ -2,7 +2,7 @@ extends CanvasLayer
 
 signal restart_requested
 
-enum State { START, CREDITS, PLAYING, PAUSED, GAME_OVER }
+enum State { START, CREDITS, PLAYING, PAUSED, RESUMING, GAME_OVER }
 
 const ASSET_CREDITS := """ART
 TOP-DOWN Adventure Pack by o_lobster
@@ -21,7 +21,11 @@ License: CC0 1.0"""
 # Root lays the UI out at a quarter of the viewport's size and draws it 4x.
 const UI_SCALE := 4.0
 
+const COUNTDOWN_FROM := 3
+const COUNTDOWN_STEP := 0.5
+
 var state := State.START
+var _countdown: Tween
 
 @onready var root: Control = $Root
 @onready var hud_area: Control = %HudArea
@@ -33,13 +37,14 @@ var state := State.START
 @onready var game_over_screen: Control = %GameOverScreen
 @onready var credits_screen: Control = %CreditsScreen
 @onready var credits_text: Label = %CreditsText
+@onready var countdown_label: Label = %CountdownLabel
 
 
 func _ready() -> void:
 	get_viewport().size_changed.connect(_fit_to_screen)
 	_fit_to_screen()
 	%PlayButton.pressed.connect(start_playing)
-	%ResumeButton.pressed.connect(start_playing)
+	%ResumeButton.pressed.connect(_start_countdown)
 	%RestartButton.pressed.connect(restart_requested.emit)
 	%CreditsButton.pressed.connect(_set_state.bind(State.CREDITS))
 	%BackButton.pressed.connect(_set_state.bind(State.START))
@@ -65,7 +70,7 @@ func _fit_to_screen() -> void:
 func _notification(what: int) -> void:
 	var app_backgrounded := what == NOTIFICATION_APPLICATION_PAUSED \
 		or what == NOTIFICATION_APPLICATION_FOCUS_OUT
-	if app_backgrounded and state == State.PLAYING:
+	if app_backgrounded and (state == State.PLAYING or state == State.RESUMING):
 		_set_state(State.PAUSED)
 
 
@@ -78,6 +83,19 @@ func start_playing() -> void:
 	_set_state(State.PLAYING)
 
 
+# The tree stays paused throughout, so the swipes MobileInputs would turn into
+# move_* actions never arrive and the player keeps their direction.
+func _start_countdown() -> void:
+	_set_state(State.RESUMING)
+	countdown_label.text = str(COUNTDOWN_FROM)
+	_countdown = create_tween()
+	for number in range(COUNTDOWN_FROM - 1, 0, -1):
+		_countdown.tween_interval(COUNTDOWN_STEP)
+		_countdown.tween_callback(countdown_label.set_text.bind(str(number)))
+	_countdown.tween_interval(COUNTDOWN_STEP)
+	_countdown.tween_callback(start_playing)
+
+
 func show_game_over(score: int, high_score: int, is_new_best: bool) -> void:
 	%FinalScoreLabel.text = "SCORE %d" % score
 	%GameOverBestLabel.text = "BEST %d" % high_score
@@ -86,14 +104,17 @@ func show_game_over(score: int, high_score: int, is_new_best: bool) -> void:
 
 
 func _set_state(new_state: State) -> void:
+	if _countdown:
+		_countdown.kill()
 	state = new_state
 	var playing := state == State.PLAYING
 	get_tree().paused = not playing
 	pause_button.visible = playing
-	mute_button.visible = not playing and state != State.CREDITS
+	mute_button.visible = not playing and state != State.CREDITS and state != State.RESUMING
 	dim.visible = not playing
 	start_screen.visible = state == State.START
 	pause_screen.visible = state == State.PAUSED
+	countdown_label.visible = state == State.RESUMING
 	game_over_screen.visible = state == State.GAME_OVER
 	credits_screen.visible = state == State.CREDITS
 	# Built on first open: the engine notices are ~80 KB of text to shape.
