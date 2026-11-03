@@ -16,8 +16,9 @@ var last_direction := Vector2.DOWN  # Default facing down
 
 const SPEED := 130
 # Enemies deal damage on every frame of contact, so this is what spaces hits apart.
-const INVULNERABLE_SECONDS := 1.5
+const BLINKS := 6
 const BLINK_SECONDS := 0.25
+const INVULNERABLE_SECONDS := BLINKS * BLINK_SECONDS
 const BLINK_FADED_ALPHA := 0.2
 const FALL_SLIDE_SECONDS := 0.12
 # The fall strip shrinks toward the bottom of its frame, this far above the feet.
@@ -122,10 +123,12 @@ func take_damage():
 
 ## Makes the player immune for INVULNERABLE_SECONDS and blinks the sprite until it ends.
 func start_invulnerability():
+	if is_dead:
+		return
 	_stop_invulnerability()
 	is_invulnerable = true
 	# A tween belongs to the player, so it freezes with the game and a restart frees it.
-	invulnerability_tween = create_tween().set_loops(roundi(INVULNERABLE_SECONDS / BLINK_SECONDS))
+	invulnerability_tween = create_tween().set_loops(BLINKS)
 	invulnerability_tween.tween_callback(func(): anim.modulate.a = BLINK_FADED_ALPHA)
 	invulnerability_tween.tween_interval(BLINK_SECONDS / 2)
 	invulnerability_tween.tween_callback(func(): anim.modulate.a = 1.0)
