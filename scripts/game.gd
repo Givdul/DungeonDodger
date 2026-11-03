@@ -35,7 +35,7 @@ var point_count := 0
 
 # The score at which the first phantom comes, so a run opens with a warm-up.
 @export var first_phantom_points := 5
-# Past this many enemies, dying ones included, a score milestone spawns nothing.
+# With this many enemies out, dying ones included, a score milestone spawns nothing.
 @export var max_enemies := 7
 
 # How far inside the view's top and bottom edges the player's feet stay, and
@@ -219,7 +219,7 @@ func _on_point_picked_up():
 		spawn_enemy(_scarcest_enemy_scene())
 
 
-# The kind with the fewest alive, ties broken at random, so the mix stays even.
+# The kind with the fewest out, dying ones included, ties broken at random, so the mix stays even.
 # Bats hit hardest, so only one is out at a time.
 func _scarcest_enemy_scene() -> PackedScene:
 	var enemies := get_tree().get_nodes_in_group("Enemies")
