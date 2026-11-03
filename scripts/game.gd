@@ -54,6 +54,7 @@ func _ready():
 
 	dungeon.coin_picked_up.connect(_on_point_picked_up)
 	player.died.connect(_on_player_died)
+	player.fell.connect(_on_player_fell)
 	player.key_changed.connect(held_key.set_visible)
 	ui.restart_requested.connect(_restart)
 	if _restarting:
@@ -79,6 +80,9 @@ func _physics_process(delta):
 			return
 	camera.position.y -= scroll_speed() * delta
 	dungeon.follow(screen_rect())
+	# The scroll edge and hazards leave a falling player alone until they are back on the floor.
+	if player.is_falling:
+		return
 	_keep_player_in_view()
 	var hazard = dungeon.hazard_at(player.position)
 	if hazard:
@@ -131,6 +135,13 @@ func _on_player_died():
 		ScoreManager.high_score = point_count
 		ScoreManager.save_high_score()
 	ui.show_game_over(point_count, ScoreManager.high_score, is_new_best)
+
+
+# Back on the safe path near the middle of the view, clear of the scroll edge.
+func _on_player_fell():
+	var middle: Vector2 = dungeon.to_local(floor_band().get_center())
+	player.global_position = dungeon.to_global(dungeon.path_spot_near(middle))
+	player.start_invulnerability()
 
 
 func _restart():

@@ -78,6 +78,8 @@ var _bottom_row: int
 var _next_row: int
 var _start_row: int
 var _path_column := randi_range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN - 1)
+# The safe path's columns in each built row.
+var _path_columns: Dictionary[int, Array] = {}
 var _hazards: Dictionary[Vector2i, Node2D] = {}
 # Bomberplants and chests, which block the cell they stand on.
 var _solids: Dictionary[Vector2i, Node2D] = {}
@@ -130,6 +132,14 @@ func free_spot_near(point: Vector2) -> Vector2:
 	return map_to_local(cells.pick_random()) if not cells.is_empty() else point
 
 
+## A random spot on the safe path within a few rows of the point, in local
+## coordinates, so whoever is put there can always get through.
+func path_spot_near(point: Vector2) -> Vector2:
+	var origin := local_to_map(point)
+	var cells := _free_cells(origin.y - 3, origin.y + 2).filter(func(cell): return cell.x in _path_columns.get(cell.y, []))
+	return map_to_local(cells.pick_random()) if not cells.is_empty() else point
+
+
 ## The centers of plain floor cells inside the band, in global coordinates.
 func free_spots_in(band: Rect2) -> Array:
 	var cells := _free_cells(_row_at(to_local(band.position).y), _row_at(to_local(band.end).y))
@@ -163,6 +173,7 @@ func _build_row(row: int) -> void:
 		set_cell(Vector2i(column, row), 0, _floor_tile(column, row))
 
 	var path := _advance_path()
+	_path_columns[row] = path
 	var rows_ahead := _start_row - row
 	var depth := rows_ahead - ROWS_BEFORE_HAZARDS
 	var hole_seed_chance := clampf(depth * HOLE_SEED_CHANCE_PER_ROW, 0.0, MAX_HOLE_SEED_CHANCE)
@@ -272,6 +283,7 @@ func _place_coins(row: int) -> void:
 
 
 func _drop_row(row: int) -> void:
+	_path_columns.erase(row)
 	for column in range(LEFT_WALL_COLUMN, RIGHT_WALL_COLUMN + 1):
 		erase_cell(Vector2i(column, row))
 		_hazards.erase(Vector2i(column, row))

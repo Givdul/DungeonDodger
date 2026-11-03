@@ -2,6 +2,8 @@ extends CharacterBody2D
 
 signal lives_changed(lives)
 signal died
+# Emitted when a fall that cost a life has played, so the game can put the player back on the floor.
+signal fell
 signal key_changed(has_key: bool)
 
 @onready var anim = $AnimatedSprite2D
@@ -24,6 +26,7 @@ const FALL_SLIDE_SECONDS := 0.12
 # The fall strip shrinks toward the bottom of its frame, this far above the feet.
 const FALL_SPRITE_RISE := 2.0
 var is_dead := false
+var is_falling := false
 var is_hit := false  # Flag to know if hit anim is playing
 var is_invulnerable := false
 var invulnerability_tween: Tween
@@ -33,8 +36,8 @@ var has_key := false:
 		key_changed.emit(value)
 
 func _physics_process(_delta):
-	if is_dead:
-		# Dead, keep death animation, no movement
+	if is_dead or is_falling:
+		# Dead or falling, keep that animation, no movement
 		return
 	
 	# Update direction based on last key pressed
@@ -74,7 +77,7 @@ func heal():
 	lives_changed.emit(current_lives)
 
 func take_damage():
-	if current_lives <= 0 or is_invulnerable or is_dead:
+	if current_lives <= 0 or is_invulnerable or is_dead or is_falling:
 		return
 	
 	current_lives -= 1
@@ -106,7 +109,7 @@ func take_damage():
 	await anim.animation_finished
 	is_hit = false
 	# Falling or being crushed mid-hit replaces the hit animation, which still finishes this wait.
-	if is_dead:
+	if is_dead or is_falling:
 		return
 
 	# Resume last movement animation or idle
@@ -141,13 +144,27 @@ func _stop_invulnerability():
 		invulnerability_tween.kill()
 	anim.modulate.a = 1.0
 
-## Pulls the player into the hole and plays the fall.
+## Pulls the player into the hole and plays the fall. It costs a life, and on
+## the last one it ends the run. Otherwise the player stops and fell is emitted.
 func fall_into(hole_center: Vector2):
-	if is_dead:
+	if is_dead or is_falling:
 		return
 	var feet := hole_center + Vector2(0, FALL_SPRITE_RISE)
 	create_tween().tween_property(self, "global_position", feet, FALL_SLIDE_SECONDS)
-	die(&"fall")
+	if current_lives <= 1:
+		die(&"fall")
+		return
+	current_lives -= 1
+	lives_changed.emit(current_lives)
+	is_falling = true
+	direction = Vector2.ZERO
+	_stop_invulnerability()
+	anim.play(&"fall")
+	audio_stream_player_2d.play()
+	await anim.animation_finished
+	is_falling = false
+	anim.play(&"idle")
+	fell.emit()
 
 func die(animation := &"death"):
 	if is_dead:
