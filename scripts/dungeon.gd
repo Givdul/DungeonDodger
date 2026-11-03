@@ -44,7 +44,7 @@ const KEY_CHANCE_PER_ROW := 0.015
 const HAZARD_EDGE_GRACE := 3.0
 
 const COIN_RUN_LENGTH := Vector2i(3, 5)
-const ROWS_BETWEEN_COIN_RUNS := Vector2i(2, 6)
+const ROWS_BETWEEN_COIN_RUNS := Vector2i(4, 9)
 # Keeps the first coins out from under the player at the start of a run.
 const ROWS_BEFORE_FIRST_COIN_RUN := 3
 
