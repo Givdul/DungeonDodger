@@ -3,7 +3,9 @@ extends TileMapLayer
 ## the rows, and everything on them, that scroll off the top.
 ##
 ## A two-column safe path winds down the corridor and never holds a hazard, so
-## the player can always get through. Coins run along it.
+## the player can always get through. Coins run along it. The strip along each
+## wall is an open lane too: the player's feet stop past the outermost floor
+## column there, so its hazards never trigger, and nothing solid stands in it.
 
 signal coin_picked_up
 
@@ -124,11 +126,11 @@ func _build_row(row: int) -> void:
 		elif randf() < trap_chance:
 			_place_trap(cell)
 	if row >= _first_plant_row and randf() < PLANT_CHANCE_PER_ROW:
-		_place_solid(bomberplant_scene, row, _free_columns(row, path))
+		_place_solid(bomberplant_scene, row, _solid_columns(row, path))
 	if row >= _first_item_row and randf() < CHEST_CHANCE_PER_ROW:
 		# Right beside the path, so the player can always reach it.
 		var beside_path := [path.front() - 1, path.back() + 1]
-		_place_solid(chest_scene, row, _free_columns(row, path).filter(func(column): return column in beside_path))
+		_place_solid(chest_scene, row, _solid_columns(row, path).filter(func(column): return column in beside_path))
 	_place_coins(row)
 	if row >= _first_item_row and randf() < KEY_CHANCE_PER_ROW:
 		# On the path column the coins aren't using.
@@ -147,8 +149,9 @@ func _advance_path() -> Array:
 	return range(mini(from, _path_column), maxi(from, _path_column) + 2)
 
 
-func _free_columns(row: int, path: Array) -> Array:
-	return range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1).filter(func(column):
+# Off the path and the outermost floor columns, so solids never block the wall lanes.
+func _solid_columns(row: int, path: Array) -> Array:
+	return range(FIRST_FLOOR_COLUMN + 1, LAST_FLOOR_COLUMN).filter(func(column):
 		var cell := Vector2i(column, row)
 		return column not in path and not _hazards.has(cell) and not _solids.has(cell))
 
