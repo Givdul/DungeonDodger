@@ -19,7 +19,7 @@ func _ready():
 	motion_mode = MOTION_MODE_FLOATING
 	wall_min_slide_angle = 0.0  # A near head-on bump slides past instead of stopping.
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	if is_dead:
 		return
 	if not is_instance_valid(player):
