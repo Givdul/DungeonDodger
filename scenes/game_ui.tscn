@@ -124,6 +124,23 @@ layout_mode = 2
 text = "TAP TO PLAY"
 horizontal_alignment = 1
 
+[node name="CreditsButton" type="Button" parent="Root/StartScreen" unique_id=814528532]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -60.0
+offset_right = 40.0
+offset_bottom = -46.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+text = "CREDITS"
+
 [node name="PauseScreen" type="VBoxContainer" parent="Root" unique_id=1666705888]
 unique_name_in_owner = true
 layout_mode = 1
@@ -209,6 +226,44 @@ layout_mode = 2
 size_flags_horizontal = 4
 focus_mode = 0
 text = "RESTART"
+
+[node name="CreditsScreen" type="VBoxContainer" parent="Root" unique_id=1588344637]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 32.0
+offset_right = -8.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="CreditsLabel" type="Label" parent="Root/CreditsScreen" unique_id=893549440]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "CREDITS"
+horizontal_alignment = 1
+
+[node name="CreditsScroll" type="ScrollContainer" parent="Root/CreditsScreen" unique_id=1862566376]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CreditsText" type="Label" parent="Root/CreditsScreen/CreditsScroll" unique_id=1663665611]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+
+[node name="BackButton" type="Button" parent="Root/CreditsScreen" unique_id=1817865589]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+text = "BACK"
 
 [node name="HudArea" type="Control" parent="Root" unique_id=1406385117]
 unique_name_in_owner = true
