@@ -13,7 +13,7 @@ extends Node2D
 @onready var ui = $UI
 @onready var swipe_hint: Label = $SwipeHint
 
-# The view holds still until the first swipe or key press of a run. Pausing and resuming leave it set.
+# The view holds still until the first swipe or key press of a run. Pausing and resuming do not reset it.
 var run_started := false
 
 # Static so it survives reload_current_scene(): a restart skips the start screen.
