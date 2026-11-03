@@ -11,7 +11,8 @@ func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	var config := ConfigFile.new()
 	if config.load(SAVE_PATH) == OK:
-		muted = config.get_value("audio", "muted", false)
+		var saved_muted = config.get_value("audio", "muted", false)
+		muted = saved_muted if saved_muted is bool else false
 	_apply_mute()
 
 
