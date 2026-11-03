@@ -13,6 +13,7 @@ config_version=5
 config/name="Dungeon Dodger"
 run/main_scene="res://scenes/game.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
+boot_splash/show_image=false
 config/icon="res://assets/sprites/icon.svg"
 
 [autoload]
@@ -26,6 +27,8 @@ _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 window/size/viewport_width=720
 window/size/viewport_height=1280
 window/stretch/mode="canvas_items"
+window/stretch/aspect="keep_width"
+window/handheld/orientation=1
 
 [editor_plugins]
 
@@ -67,3 +70,4 @@ toggle_mute={
 
 textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
