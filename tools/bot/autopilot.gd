@@ -311,14 +311,10 @@ func _may_collide(from: Vector2) -> bool:
 	return _solids.any(func(solid): return from.distance_to(solid) < SOLID_RANGE)
 
 
-# Spikes that will be up by then stop the player's body at their edge, and push it back out if it
-# overlaps them. Only a player standing on the cell, as the game sees it, walks through.
+# Spikes that will be up by then stop a body from entering. One that already overlaps them passes.
 func _enters_raised_spikes(from: Vector2, to: Vector2, time: float) -> bool:
 	for spikes in _spikes:
-		if not spikes.is_up_in(time) or _cell(spikes).grow(Spikes.HOLD_MARGIN).has_point(from):
-			continue
-		var gap := _gap_to(spikes, to)
-		if gap < 0.0 and gap < _gap_to(spikes, from):
+		if spikes.is_up_in(time) and _gap_to(spikes, from) >= 0.0 and _gap_to(spikes, to) < 0.0:
 			return true
 	return false
 
