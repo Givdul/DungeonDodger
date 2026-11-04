@@ -41,17 +41,23 @@ func _physics_process(_delta: float) -> void:
 
 
 # A body whose origin is on the cell is let through until it has left, so it can walk off. Any other
-# body is blocked at once. Only the player is hurt, and only if it stands where hazard_at counts it.
+# body is blocked at once, and pushed out of the solid now rather than on its next move, which the
+# scroll edge would otherwise read as a crush. Only the player is hurt, and only if it stands where
+# hazard_at counts it.
 func _rise() -> void:
 	var size: Vector2 = _solid_shape.shape.size
 	var cell := Rect2(global_position - size / 2, size).grow(HOLD_MARGIN)
-	for body: CharacterBody2D in _occupants.get_overlapping_bodies():
+	var bodies := _occupants.get_overlapping_bodies()
+	for body: CharacterBody2D in bodies:
 		if cell.has_point(body.global_position):
 			body.add_collision_exception_with(_solid)
 			_held.append(body)
 		if body.is_in_group(&"Player") and get_parent().hazard_at(body.global_position) == self:
 			body.take_damage()
 	_solid_shape.disabled = false
+	for body: CharacterBody2D in bodies:
+		if body not in _held:
+			body.move_and_collide(Vector2.ZERO)
 
 
 func _lower() -> void:

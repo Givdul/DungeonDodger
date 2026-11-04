@@ -36,6 +36,8 @@ const CONTACT_MARGIN := 3.0
 const BLAST_MARGIN := 4.0
 # How far off its guess of when a bomb blows can be.
 const BLAST_TIMING_SLACK := 0.1
+# How far off its guess of when spikes rise can be, which is a hit to whoever stands on the cell then.
+const SPIKE_RISE_SLACK := 0.1
 const BOMB_PRESSURE := 60.0
 const TRAP_PRESSURE := 40.0
 const EDGE_COMFORT := 30.0
@@ -309,20 +311,28 @@ func _may_collide(from: Vector2) -> bool:
 	return _solids.any(func(solid): return from.distance_to(solid) < SOLID_RANGE)
 
 
-# Spikes that will be up by then stop the player's body at their edge. Spikes the body is already
-# touching let it walk off, as in the game.
+# Spikes that will be up by then stop the player's body at their edge, and push it back out if it
+# overlaps them. Only a player standing on the cell, as the game sees it, walks through.
 func _enters_raised_spikes(from: Vector2, to: Vector2, time: float) -> bool:
 	for spikes in _spikes:
-		if spikes.is_up_in(time) and not _touches(spikes, from) and _touches(spikes, to):
+		if not spikes.is_up_in(time) or _cell(spikes).grow(Spikes.HOLD_MARGIN).has_point(from):
+			continue
+		var gap := _gap_to(spikes, to)
+		if gap < 0.0 and gap < _gap_to(spikes, from):
 			return true
 	return false
 
 
-func _touches(spikes: Spikes, feet: Vector2) -> bool:
+func _cell(spikes: Spikes) -> Rect2:
 	var tile_size := Vector2(dungeon.tile_set.tile_size)
-	var cell := Rect2(spikes.global_position - tile_size / 2, tile_size)
+	return Rect2(spikes.global_position - tile_size / 2, tile_size)
+
+
+# How far the player's body is from the spikes' cell, below zero while they overlap.
+func _gap_to(spikes: Spikes, feet: Vector2) -> float:
+	var cell := _cell(spikes)
 	var body := feet + _body.position * player.scale
-	return body.distance_to(body.clamp(cell.position, cell.end)) < _radius(_body)
+	return body.distance_to(body.clamp(cell.position, cell.end)) - _radius(_body)
 
 
 func _follow_scroll(sim: Sim) -> void:
@@ -390,7 +400,7 @@ func _add_hazard_cost(sim: Sim) -> void:
 			_fall(sim)
 		else:
 			sim.cost += TRAP_PRESSURE * _frame_seconds
-	elif hazard.is_up_in(sim.time) and not hazard.is_up_in(sim.time - _frame_seconds):
+	elif hazard.is_up_in(sim.time + SPIKE_RISE_SLACK) and not hazard.is_up_in(sim.time - SPIKE_RISE_SLACK):
 		_hit(sim)
 	else:
 		sim.cost += TRAP_PRESSURE * _frame_seconds
