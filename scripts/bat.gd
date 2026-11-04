@@ -164,6 +164,7 @@ func die():
 	state = "dead"
 	timer.stop()
 	_clear_telegraph()
+	$DeathSound.play_death()
 	anim.play("death_right" if anim.animation.ends_with("right") else "death_left")
 	await anim.animation_finished
 	queue_free()

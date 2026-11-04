@@ -63,6 +63,7 @@ func _start_run() -> void:
 # The spinner has no fall animation, so it slides into the hole and shrinks into the dark.
 func fall_into(hole_center: Vector2) -> void:
 	is_dead = true
+	$DeathSound.play_death()
 	var tween := create_tween()
 	tween.tween_property(self, "global_position", hole_center, FALL_SLIDE_SECONDS)
 	tween.tween_property(self, "scale", Vector2.ZERO, FALL_SECONDS).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
@@ -74,6 +75,7 @@ func die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	$DeathSound.play_death()
 	anim.play(&"death")
 	await anim.animation_finished
 	queue_free()

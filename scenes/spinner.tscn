@@ -4,6 +4,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Spinner_Sprites/spinner_idle_anim_all_dir_strip_8.png" id="t0_idle"]
 [ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Spinner_Sprites/spinner_run_attack_anim_all_dir_strip_8.png" id="t1_run"]
 [ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Spinner_Sprites/spinner_death_anim_all_dir_strip_8.png" id="t2_death"]
+[ext_resource type="Script" path="res://scripts/death_sound.gd" id="ds_script"]
+[ext_resource type="AudioStream" path="res://assets/sounds/spinner-death.wav" id="ds_stream"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_idle0"]
 atlas = ExtResource("t0_idle")
@@ -180,3 +182,9 @@ collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitArea"]
 shape = SubResource("CircleShape2D_body")
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("ds_stream")
+volume_db = 4.0
+bus = &"SFX"
+script = ExtResource("ds_script")

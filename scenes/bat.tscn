@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://b3a7dyt1hmtg8"]
+[gd_scene load_steps=26 format=3 uid="uid://b3a7dyt1hmtg8"]
 
 [ext_resource type="Script" path="res://scripts/bat.gd" id="1_8opw1"]
 [ext_resource type="Texture2D" uid="uid://cpxct6kgaucmh" path="res://assets/sprites/Enemies_Sprites/Pinkbat_Sprites/pinkbat_idle_left_anim_strip_5.png" id="2_51esr"]
@@ -8,6 +8,8 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Pinkbat_Sprites/pinkbat_death_anim_left_strip_8.png" id="d_death_left"]
 [ext_resource type="Texture2D" path="res://assets/sprites/Enemies_Sprites/Pinkbat_Sprites/pinkbat_death_anim_right_strip_8.png" id="d_death_right"]
+[ext_resource type="Script" path="res://scripts/death_sound.gd" id="ds_script"]
+[ext_resource type="AudioStream" path="res://assets/sounds/bat-death.wav" id="ds_stream"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_death_left0"]
 atlas = ExtResource("d_death_left")
@@ -295,3 +297,9 @@ width = 2.0
 default_color = Color(1, 0.25, 0.25, 0.5)
 begin_cap_mode = 2
 end_cap_mode = 2
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("ds_stream")
+volume_db = 4.0
+bus = &"SFX"
+script = ExtResource("ds_script")

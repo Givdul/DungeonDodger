@@ -110,6 +110,15 @@ def main() -> None:
         mix(rumble(0.5, rng), tone([180, 40], 0.4), noise(0.08, rng)),
         0.08,
     )
+    # Each death sound is shorter than its enemy's death animation, because the
+    # enemy frees itself, and its sound, when that ends.
+    write("assets/sounds/bat-death.wav", mix(tone([1800, 2600, 700], 0.22), noise(0.05, rng)), 0.04)
+    write("assets/sounds/phantom-death.wav", tone([660, 880, 220], 0.45, vibrato=0.05), 0.03)
+    write(
+        "assets/sounds/spinner-death.wav",
+        mix(tone([1400, 350], 0.3), tone([2100, 520], 0.3), noise(0.06, rng)),
+        0.04,
+    )
 
 
 if __name__ == "__main__":
