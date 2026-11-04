@@ -105,11 +105,13 @@ func _ready():
 	current_lives = max_lives
 	emit_signal("lives_changed", current_lives)
 
-func heal():
-	if is_dead:
-		return
-	current_lives = mini(current_lives + 1, max_lives)
+# Returns whether a heart was restored, so a pickup at full health can stay put.
+func heal() -> bool:
+	if is_dead or current_lives >= max_lives:
+		return false
+	current_lives += 1
 	lives_changed.emit(current_lives)
+	return true
 
 func take_damage():
 	if current_lives <= 0 or is_invulnerable or is_rolling or is_dead or is_falling:
