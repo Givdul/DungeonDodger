@@ -5,7 +5,7 @@ extends TileMapLayer
 ## Hazards come in hand-made patterns with plain floor between them. A two-column
 ## safe path winds up the corridor and never holds a hazard: it is planned
 ## through each pattern's gaps before the pattern is built, so the player can
-## always get through. Coins run along it. The strip along each wall is an open
+## always get through. Coins sit on it or on the free floor beside it. The strip along each wall is an open
 ## lane too: the player's feet stop past the outermost floor column there, so
 ## its hazards never trigger, and nothing solid stands in it. Patterns keep
 ## their hazards off those columns, so every hazard drawn can trigger.
@@ -106,10 +106,11 @@ const HAZARD_EDGE_GRACE := 3.0
 const HOLE_EDGE_GRACE := 5.0
 
 # Empty rows between one coin and the next, picked from these. The repeated 2
-# makes short gaps likelier, for about 0.3 coins a row.
-const ROWS_BETWEEN_COINS: Array[int] = [1, 2, 2, 3, 4]
+# makes short gaps likelier, for about a third of a coin a row.
+const ROWS_BETWEEN_COINS: Array[int] = [1, 2, 2, 2, 3]
 # Rows ahead of the player's start before the first coin.
 const ROWS_BEFORE_FIRST_COIN := 3
+const NO_CELL := Vector2i(LEFT_WALL_COLUMN, 0)
 
 # Rows built above the view's top edge, so what spawns just above the view stands on a built row.
 const ROWS_BUILT_ABOVE_VIEW := 1
@@ -130,7 +131,8 @@ var _hazards: Dictionary[Vector2i, Node2D] = {}
 # Bomberplants and chests, which block the cell they stand on.
 var _solids: Dictionary[Vector2i, Node2D] = {}
 var _plant: Node2D
-var _coin_path_side := 0
+# Where the latest coin went, so the next one picks another column and a key another cell.
+var _last_coin_cell := NO_CELL
 # Chests only spawn once a key has been picked up, so the first one is never unopenable.
 var _key_found := false
 var _rows_until_coin := ROWS_BEFORE_FIRST_COIN
@@ -263,9 +265,10 @@ func _build_row(row: int) -> void:
 		return
 	_place_coins(row)
 	if rows_ahead >= ROWS_BEFORE_ITEMS and randf() < KEY_CHANCE_PER_ROW:
-		# On the path column the coins aren't using.
+		# On the path, in a cell without a coin.
+		var key_columns := path.filter(func(column): return Vector2i(column, row) != _last_coin_cell)
 		var key := key_scene.instantiate()
-		key.position = map_to_local(Vector2i(_path_column + 1 - _coin_path_side, row))
+		key.position = map_to_local(Vector2i(key_columns.pick_random(), row))
 		key.picked_up.connect(func(): _key_found = true)
 		add_child(key)
 
@@ -405,21 +408,34 @@ func _place_hazard(cell: Vector2i, symbol: String) -> void:
 	_hazards[cell] = hazard
 
 
-# Coins are spread out one at a time along the safe path, on either of its columns.
+# Coins are spread out one at a time, each in a different column than the last.
 func _place_coins(row: int) -> void:
 	if _rows_until_coin > 0:
 		_rows_until_coin -= 1
 		return
+	var columns := _coin_columns(row)
+	# With no cell to put it in, the coin is due again on the next row.
+	if columns.is_empty():
+		return
 	_rows_until_coin = ROWS_BETWEEN_COINS.pick_random()
-	_coin_path_side = randi_range(0, 1)
+	_last_coin_cell = Vector2i(columns.pick_random(), row)
 
 	var coin := coin_scene.instantiate()
-	coin.position = map_to_local(Vector2i(_path_column + _coin_path_side, row))
+	coin.position = map_to_local(_last_coin_cell)
 	coin.z_as_relative = false
 	coin.z_index = 1
 	# Deferred: picked_up fires inside a physics callback, where spawning new bodies is refused.
 	coin.picked_up.connect(coin_picked_up.emit, CONNECT_DEFERRED)
 	add_child(coin)
+
+
+# The columns a coin may take in the row: free cells on the path or right beside
+# it, short of the wall lane and not in the last coin's column.
+func _coin_columns(row: int) -> Array:
+	var path := _path_columns[row]
+	return range(path.front() - 1, path.back() + 2).filter(func(column): return \
+		column > FIRST_FLOOR_COLUMN and column < LAST_FLOOR_COLUMN and column != _last_coin_cell.x \
+		and _is_free_cell(Vector2i(column, row)))
 
 
 func _drop_row(row: int) -> void:
