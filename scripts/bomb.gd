@@ -1,7 +1,7 @@
 extends Node2D
 ## A bomb lobbed in an arc. A marker shows where it will land. It sits there on a
-## burning fuse, then explodes, hurting the player and killing every enemy in the
-## blast, so the player can lure enemies onto it.
+## burning fuse, then explodes, hurting the player and killing the enemies in the
+## blast, so the player can lure enemies onto it. Spinners shrug it off.
 
 signal exploded
 
@@ -66,8 +66,9 @@ func _explode() -> void:
 	$Marker.hide()
 	explosion.show()
 	explosion.play()
+	# Spinners have no die(): blasts don't hurt them.
 	for enemy in get_tree().get_nodes_in_group("Enemies"):
-		if global_position.distance_to(enemy.global_position) <= blast_radius:
+		if enemy.has_method("die") and global_position.distance_to(enemy.global_position) <= blast_radius:
 			enemy.die()
 	var player = get_tree().get_first_node_in_group("Player")
 	if global_position.distance_to(player.global_position) <= blast_radius:
