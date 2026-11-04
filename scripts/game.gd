@@ -34,10 +34,10 @@ var point_count := 0
 @export var scroll_speed_per_point := 0.15
 @export var max_scroll_speed := 27.0
 
-# The score at which the first phantom comes, so a run opens with a warm-up.
-@export var first_phantom_points := 5
 # With this many enemies out, dying ones included, a score milestone spawns nothing.
 @export var max_enemies := 7
+# An enemy comes every this many points.
+const POINTS_PER_ENEMY := 10
 
 # How far inside the view's top and bottom edges the player's feet stay, and
 # where enemies spawn and bombs land. The top one keeps sprites below the hearts and score.
@@ -213,14 +213,18 @@ func _on_point_picked_up():
 
 	if get_tree().get_node_count_in_group("Enemies") >= max_enemies:
 		return
-	if point_count == first_phantom_points:
-		spawn_enemy(phantom_scene)
-	elif point_count == 10:
-		spawn_enemy(bat_scene)
-	elif point_count == 20:
-		spawn_enemy(spinner_scene)
-	elif point_count % 10 == 0:
-		spawn_enemy(_scarcest_enemy_scene())
+	if point_count % POINTS_PER_ENEMY != 0:
+		return
+	@warning_ignore("integer_division")
+	spawn_enemy(_enemy_scene_for_milestone(point_count / POINTS_PER_ENEMY))
+
+
+# Milestones 1 to 6 follow the opening order, a skipped one included. After that, the scarcest kind.
+func _enemy_scene_for_milestone(milestone: int) -> PackedScene:
+	var opening: Array[PackedScene] = [phantom_scene, phantom_scene, bat_scene, phantom_scene, bat_scene, spinner_scene]
+	if milestone <= opening.size():
+		return opening[milestone - 1]
+	return _scarcest_enemy_scene()
 
 
 # The kind with the fewest out, dying ones included, ties broken at random, so the mix stays even.
