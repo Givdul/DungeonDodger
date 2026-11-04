@@ -362,7 +362,7 @@ func _add_hazard_cost(sim: Sim) -> void:
 			_fall(sim)
 		else:
 			sim.cost += TRAP_PRESSURE * _frame_seconds
-	elif _spikes_up_in(hazard, sim.time):
+	elif hazard.is_up_in(sim.time):
 		_hit(sim)
 	else:
 		sim.cost += TRAP_PRESSURE * _frame_seconds
@@ -377,13 +377,6 @@ func _opens_in(pit: Pit, sim: Sim) -> float:
 	if pit.is_playing():
 		return (frames - 1 - pit.frame - pit.frame_progress) * seconds_per_frame
 	return sim.cracks_stepped.get_or_add(pit, sim.time) + (frames - 1) * seconds_per_frame
-
-
-func _spikes_up_in(spikes: AnimatedSprite2D, seconds: float) -> bool:
-	var frames := spikes.sprite_frames.get_frame_count(spikes.animation)
-	var fps := spikes.sprite_frames.get_animation_speed(spikes.animation)
-	var frame := int(spikes.frame + spikes.frame_progress + seconds * fps) % frames
-	return frame >= spikes.FIRST_UP_FRAME and frame <= spikes.LAST_UP_FRAME
 
 
 func _hit(sim: Sim) -> void:
