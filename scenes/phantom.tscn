@@ -310,8 +310,7 @@ position = Vector2(0, -1)
 shape = SubResource("CircleShape2D_p63es")
 
 [node name="FloorShadow" type="Node2D" parent="."]
-show_behind_parent = true
-position = Vector2(0, 9)
+position = Vector2(0, 12.5)
 script = ExtResource("shadow_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
