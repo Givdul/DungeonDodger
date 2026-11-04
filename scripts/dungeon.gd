@@ -111,6 +111,9 @@ const ROWS_BETWEEN_COINS: Array[int] = [1, 2, 2, 3, 4]
 # Rows ahead of the player's start before the first coin.
 const ROWS_BEFORE_FIRST_COIN := 3
 
+# Rows built above the view's top edge, so what spawns just above the view stands on a built row.
+const ROWS_BUILT_ABOVE_VIEW := 1
+
 # Rows are built upward, from the bottom of the view. _next_row is the next one
 # to build and _bottom_row the oldest one still built.
 var _bottom_row: int
@@ -144,7 +147,7 @@ func start(view: Rect2) -> void:
 
 
 func follow(view: Rect2) -> void:
-	while _next_row >= _row_at(view.position.y):
+	while _next_row >= _row_at(view.position.y) - ROWS_BUILT_ABOVE_VIEW:
 		_build_row(_next_row)
 		_next_row -= 1
 	while _bottom_row > _row_at(view.end.y):

@@ -192,7 +192,6 @@ script = ExtResource("1_4l5gb")
 phantom_scene = ExtResource("5_0ij6h")
 bat_scene = ExtResource("6_7trwo")
 spinner_scene = ExtResource("3_spinner")
-SAFE_DISTANCE_ENEMY = 60
 
 [node name="MobileInputs" type="Node" parent="."]
 script = ExtResource("5_n31aw")

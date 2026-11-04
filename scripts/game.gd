@@ -21,10 +21,9 @@ var run_started := false
 # Static so it survives reload_current_scene(): a restart skips the start screen.
 static var _restarting := false
 
-@export var SAFE_DISTANCE_ENEMY := 100  # Minimum distance from player (pixels)
 var point_count := 0
 
-# Inset from the side walls (the Bounds bodies) where enemies may spawn.
+# Inset from the side walls (the Bounds bodies) that enemies and bats keep to.
 @export var padding_left := 6
 @export var padding_right := 6
 
@@ -40,9 +39,13 @@ var point_count := 0
 const POINTS_PER_ENEMY := 10
 
 # How far inside the view's top and bottom edges the player's feet stay, and
-# where enemies spawn and bombs land. The top one keeps sprites below the hearts and score.
+# where bombs land. The top one keeps sprites below the hearts and score.
 const VIEW_TOP_MARGIN := 44.0
 const VIEW_BOTTOM_MARGIN := 8.0
+# How far past the screen's top or bottom edge an enemy spawns: about half its sprite, so it
+# starts out of sight. Keep it under a tile row, which the dungeon builds above the view.
+const ENEMY_SPAWN_MARGIN := 12.0
+const ENEMY_SPAWN_ATTEMPTS := 10
 # A push the player can't follow by more than this means something solid is in
 # the way, and the scroll edge crushes them.
 const CRUSH_TOLERANCE := 1.0
@@ -171,7 +174,6 @@ func _draw():
 		return
 
 	draw_rect(playable_area(), Color(0, 1, 0, 0.3), false, 3)
-	draw_arc(player.global_position, SAFE_DISTANCE_ENEMY, 0, TAU, 32, Color(0, 0, 1, 0.3), 2.0, true)
 
 
 func is_between_walls(x: float) -> bool:
@@ -179,30 +181,13 @@ func is_between_walls(x: float) -> bool:
 		and x < $Bounds/RightWorldBound.position.x - padding_right
 
 
-# Where enemies may spawn: between the walls, in the floor band.
+# Between the walls, in the floor band: where bats rush, and the x range enemies spawn in.
 func playable_area() -> Rect2:
 	var band := floor_band()
 	var left: float = $Bounds/LeftWorldBound.position.x + padding_left
 	var right: float = $Bounds/RightWorldBound.position.x - padding_right
 	return Rect2(left, band.position.y, right - left, band.size.y)
 
-
-func get_random_point_away_from_player(distance) -> Vector2:
-	var area := playable_area()
-	var rect_min := area.position
-	var rect_max := area.end
-
-	# Try to find a spawn pos away from player
-	for i in range(999):
-		var x = randf_range(rect_min.x, rect_max.x)
-		var y = randf_range(rect_min.y, rect_max.y)
-		var spawn_pos = Vector2(x, y)
-
-		if spawn_pos.distance_to(player.global_position) > distance and dungeon.is_free(spawn_pos):
-			return spawn_pos
-
-	# fallback position if none found after attempts
-	return area.get_center()
 
 func _on_point_picked_up():
 	point_count += 1
@@ -247,12 +232,26 @@ func _lay_new_high_score_line() -> void:
 	new_high_score_label.show()
 
 
+# Just past the top or bottom edge of the screen, whichever is further from the player,
+# between the walls and on free floor where the dungeon has some.
+func _enemy_spawn_point() -> Vector2:
+	var screen := screen_rect()
+	var from_top: bool = player.global_position.y > screen.get_center().y
+	var y := screen.position.y - ENEMY_SPAWN_MARGIN if from_top else screen.end.y + ENEMY_SPAWN_MARGIN
+	var area := playable_area()
+	var point := Vector2(randf_range(area.position.x, area.end.x), y)
+	for _attempt in ENEMY_SPAWN_ATTEMPTS:
+		if dungeon.is_free(point):
+			break
+		point.x = randf_range(area.position.x, area.end.x)
+	return point
+
+
 func spawn_enemy(enemy_scene: PackedScene):
-	var spawn_pos = get_random_point_away_from_player(SAFE_DISTANCE_ENEMY)
 	var enemy = enemy_scene.instantiate()
 # Add enemy as the first child so it's drawn below existing enemies:
 	add_child(enemy)
 	move_child(enemy, 0)  # Move to the bottom of draw order (drawn first = behind)
-	enemy.global_position = spawn_pos
+	enemy.global_position = _enemy_spawn_point()
 	enemy.z_as_relative = false # same z-index for all
 	enemy.z_index = 6

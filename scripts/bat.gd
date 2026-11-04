@@ -17,7 +17,9 @@ extends Area2D
 # Reference your game node to get the playable area
 @onready var game = get_tree().get_first_node_in_group("Game")  # Add group "Game" to your main game Node2D
 
-var state = "locking"
+# A bat out of view, or too near the bottom edge to stay in view until its rush, is "entering":
+# it flies at the player, and only locks, winds up and rushes once it's in view.
+var state = "entering"
 var rush_direction = Vector2.ZERO
 var rush_time_left := 0.0
 var flash_tween: Tween
@@ -27,16 +29,17 @@ var marker_tween: Tween
 const WINDUP_FLASH := Color(4, 1, 1)
 const WINDUP_BLINK_SECONDS := 0.1
 const MARKER_FADE_SECONDS := 0.15
+# A lock lasts lock_time, give or take this share of it.
+const LOCK_TIME_SPREAD := 0.2
 
 func _ready():
 	add_to_group("Bats")
 	timer.connect("timeout", Callable(self, "_on_timer_timeout"))
-	_start_lock_timer()
 
 # Bats that stop at the same spot on the same frame would otherwise rush in
 # lockstep for the rest of the run, looking and acting like one bat.
 func _start_lock_timer():
-	timer.start(lock_time * randf_range(0.8, 1.2) - windup_time)
+	timer.start(lock_time * randf_range(1.0 - LOCK_TIME_SPREAD, 1.0 + LOCK_TIME_SPREAD) - windup_time)
 
 func _physics_process(delta):
 	if state == "dead":
@@ -63,12 +66,26 @@ func _physics_process(delta):
 		player.take_damage()
 
 	match state:
+		"entering":
+			_fly_in(delta)
 		"locking":
 			_face_player()
 		"rushing":
 			_move_rush(delta)
 
 			
+# The view scrolls past a bat standing still, so it has to be in view now and when its lock ends.
+func _will_stay_in_view() -> bool:
+	return game.floor_band(lock_time * (1.0 + LOCK_TIME_SPREAD)).has_point(global_position)
+
+func _fly_in(delta):
+	if _will_stay_in_view():
+		state = "locking"
+		_start_lock_timer()
+		return
+	_face_player()
+	global_position += global_position.direction_to(player.global_position) * speed * delta
+
 func _face_player():
 	if player.global_position.x >= global_position.x:
 		anim.play("idle_right")
@@ -141,8 +158,7 @@ func _move_rush(delta):
 	rush_time_left -= delta
 	var hits_wall = game and not game.is_between_walls(new_pos.x)
 	if hits_wall or rush_time_left <= 0 or _bumps_bat(new_pos):
-		state = "locking"
-		_start_lock_timer()
+		state = "entering"
 		return
 
 	position = new_pos
