@@ -181,6 +181,10 @@ animations = [{
 scale = Vector2(1.4, 1.4)
 script = ExtResource("1_script")
 
+[node name="BlastArea" type="Polygon2D" parent="."]
+z_index = 1
+z_as_relative = false
+
 [node name="Marker" type="AnimatedSprite2D" parent="."]
 z_index = 1
 z_as_relative = false
@@ -198,6 +202,7 @@ offset = Vector2(0, -1)
 visible = false
 z_index = 7
 z_as_relative = false
+scale = Vector2(1.15, 1.15)
 sprite_frames = SubResource("SpriteFrames_explosion")
 
 [node name="FuseSound" type="AudioStreamPlayer2D" parent="."]
