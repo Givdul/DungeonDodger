@@ -11,6 +11,7 @@ extends Node2D
 @onready var held_key: Sprite2D = $Camera2D/Hud/ItemBox/HeldKey
 @onready var roll_icon: Sprite2D = $Camera2D/Hud/RollBox/RollIcon
 @onready var high_score_var_label = $HighScoreVarLabel
+@onready var new_high_score_label: Label = $NewHighScoreLabel
 @onready var ui = $UI
 @onready var swipe_hint: Label = $SwipeHint
 
@@ -206,6 +207,9 @@ func get_random_point_away_from_player(distance) -> Vector2:
 func _on_point_picked_up():
 	point_count += 1
 	score_label.text = str(point_count)
+	# ScoreManager.high_score is the old best until the run ends.
+	if ScoreManager.high_score > 0 and point_count == ScoreManager.high_score + 1:
+		_lay_new_high_score_line()
 
 	if get_tree().get_node_count_in_group("Enemies") >= max_enemies:
 		return
@@ -231,6 +235,12 @@ func _scarcest_enemy_scene() -> PackedScene:
 	scenes.shuffle()
 	var counts := scenes.map(alive)
 	return scenes[counts.find(counts.min())]
+
+
+func _lay_new_high_score_line() -> void:
+	var center: Vector2 = dungeon.to_global(dungeon.lay_line())
+	new_high_score_label.global_position = center - new_high_score_label.size / 2
+	new_high_score_label.show()
 
 
 func spawn_enemy(enemy_scene: PackedScene):

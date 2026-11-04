@@ -43,7 +43,8 @@ const START_FLOOR: Array[String] = [
 	"......",
 	"......",
 ]
-const START_FLOOR_TILES := {".": FLOOR_TILE, "a": Vector2i(8, 11), "b": Vector2i(8, 12), "c": Vector2i(9, 12)}
+const LINE_TILE := Vector2i(9, 12)
+const START_FLOOR_TILES := {".": FLOOR_TILE, "a": Vector2i(8, 11), "b": Vector2i(8, 12), "c": LINE_TILE}
 
 const PATH_TURN_CHANCE := 0.25
 # Rows ahead of the player's start with no hazards, so a run opens gently.
@@ -94,6 +95,8 @@ var _coin_path_side := 0
 # Chests only spawn once a key has been picked up, so the first one is never unopenable.
 var _key_found := false
 var _rows_until_coin := ROWS_BEFORE_FIRST_COIN
+# The rows of a line laid with lay_line() that are still to be built.
+var _line_rows: Array[int] = []
 
 
 func start(view: Rect2) -> void:
@@ -111,6 +114,13 @@ func follow(view: Rect2) -> void:
 	while _bottom_row > _row_at(view.end.y):
 		_drop_row(_bottom_row)
 		_bottom_row -= 1
+
+
+## Lays a line like the start floor's across the next two rows to scroll into
+## view, clear of hazards and solids, and returns its center in local coordinates.
+func lay_line() -> Vector2:
+	_line_rows = [_next_row, _next_row - 1]
+	return Vector2(0, _next_row * tile_set.tile_size.y)
 
 
 ## The hazard whose cell the point stands well inside, if any.
@@ -178,17 +188,20 @@ func _row_at(y: float) -> int:
 func _build_row(row: int) -> void:
 	set_cell(Vector2i(LEFT_WALL_COLUMN, row), 0, LEFT_WALL_TILE)
 	set_cell(Vector2i(RIGHT_WALL_COLUMN, row), 0, RIGHT_WALL_TILE)
+	var on_line := row in _line_rows
 	for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
-		set_cell(Vector2i(column, row), 0, _floor_tile(column, row))
+		set_cell(Vector2i(column, row), 0, LINE_TILE if on_line else _floor_tile(column, row))
 
 	var path := _advance_path()
 	_path_columns[row] = path
+	# A line keeps its whole row clear, like the path does its columns.
+	var clear := range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1) if on_line else path
 	var rows_ahead := _start_row - row
 	var depth := rows_ahead - ROWS_BEFORE_HAZARDS
 	var hole_seed_chance := clampf(depth * HOLE_SEED_CHANCE_PER_ROW, 0.0, MAX_HOLE_SEED_CHANCE)
 	var trap_chance := clampf(depth * TRAP_CHANCE_PER_ROW, 0.0, MAX_TRAP_CHANCE)
 	for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
-		if column in path:
+		if column in clear:
 			continue
 		var cell := Vector2i(column, row)
 		var beside_hole := _is_hole(cell + Vector2i.DOWN) or _is_hole(cell + Vector2i.LEFT)
@@ -197,11 +210,11 @@ func _build_row(row: int) -> void:
 		elif randf() < trap_chance:
 			_place_trap(cell)
 	if rows_ahead >= ROWS_BEFORE_PLANTS and not is_instance_valid(_plant) and randf() < PLANT_CHANCE_PER_ROW:
-		_plant = _place_solid(bomberplant_scene, row, _solid_columns(row, path))
+		_plant = _place_solid(bomberplant_scene, row, _solid_columns(row, clear))
 	if _key_found and rows_ahead >= ROWS_BEFORE_ITEMS and randf() < CHEST_CHANCE_PER_ROW:
 		# Right beside the path, so the player can always reach it.
 		var beside_path := [path.front() - 1, path.back() + 1]
-		_place_solid(chest_scene, row, _solid_columns(row, path).filter(func(column): return column in beside_path))
+		_place_solid(chest_scene, row, _solid_columns(row, clear).filter(func(column): return column in beside_path))
 	_place_coins(row)
 	if rows_ahead >= ROWS_BEFORE_ITEMS and randf() < KEY_CHANCE_PER_ROW:
 		# On the path column the coins aren't using.
