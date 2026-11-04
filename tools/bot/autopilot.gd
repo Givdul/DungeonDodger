@@ -38,6 +38,8 @@ const BLAST_MARGIN := 4.0
 const BLAST_TIMING_SLACK := 0.1
 # How far off its guess of when spikes rise can be, which is a hit to whoever stands on the cell then.
 const SPIKE_RISE_SLACK := 0.1
+# How much smaller the spikes' Occupants area is than their solid, on each side.
+const SPIKES_OCCUPANTS_INSET := 1.0
 const BOMB_PRESSURE := 60.0
 const TRAP_PRESSURE := 40.0
 const EDGE_COMFORT := 30.0
@@ -311,10 +313,15 @@ func _may_collide(from: Vector2) -> bool:
 	return _solids.any(func(solid): return from.distance_to(solid) < SOLID_RANGE)
 
 
-# Spikes that will be up by then stop a body from entering. One that already overlaps them passes.
+# Spikes that will be up by then stop the player's body at their edge. One they rose over, which
+# overlaps their Occupants area, passes.
 func _enters_raised_spikes(from: Vector2, to: Vector2, time: float) -> bool:
 	for spikes in _spikes:
-		if spikes.is_up_in(time) and _gap_to(spikes, from) >= 0.0 and _gap_to(spikes, to) < 0.0:
+		if not spikes.is_up_in(time):
+			continue
+		var from_gap := _gap_to(spikes, from)
+		var to_gap := _gap_to(spikes, to)
+		if from_gap >= -SPIKES_OCCUPANTS_INSET and to_gap < 0.0 and to_gap < from_gap:
 			return true
 	return false
 
