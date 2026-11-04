@@ -16,5 +16,6 @@ func _on_body_entered(body):
 		$CollisionShape2D.set_deferred("disabled", true)  # Disable collision to be extra safe
 		anim.play("picked_up")
 		audio_stream_player.play()
+		Haptics.coin()
 		await anim.animation_finished
 		queue_free()

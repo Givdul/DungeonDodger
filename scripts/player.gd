@@ -124,6 +124,7 @@ func take_damage():
 		
 	start_invulnerability()
 	audio_stream_player_2d.play()
+	Haptics.damage()
 	
 	# Play hit animation in the correct direction
 	is_hit = true
@@ -229,6 +230,7 @@ func fall_into(hole_center: Vector2):
 	_stop_invulnerability()
 	anim.play(&"fall")
 	audio_stream_player_2d.play()
+	Haptics.damage()
 	await anim.animation_finished
 	is_falling = false
 	anim.play(&"idle")
@@ -242,6 +244,7 @@ func die(animation := &"death"):
 	_stop_invulnerability()
 	anim.play(animation)
 	death_sound.play()
+	Haptics.damage()
 	# Wait for animation to finish
 	await anim.animation_finished
 	set_physics_process(false)

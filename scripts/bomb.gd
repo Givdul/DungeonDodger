@@ -59,6 +59,7 @@ func _fly(progress: float, start: Vector2) -> void:
 func _explode() -> void:
 	$FuseSound.stop()
 	$ExplosionSound.play()
+	Haptics.explosion()
 	bomb.hide()
 	$Marker.hide()
 	explosion.show()
