@@ -11,7 +11,7 @@ func _ready() -> void:
 	# A random phase keeps a row of traps from rising in lockstep. It is random over time, not over
 	# frames, so the long rest gets its share of the starts.
 	var start := _frame_at(randf() * _cycle_seconds())
-	set_frame_and_progress(start.x, start.y)
+	set_frame_and_progress(int(start.x), start.y)
 	play()
 
 
