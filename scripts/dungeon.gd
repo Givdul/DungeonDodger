@@ -215,6 +215,9 @@ func _build_row(row: int) -> void:
 		# Right beside the path, so the player can always reach it.
 		var beside_path := [path.front() - 1, path.back() + 1]
 		_place_solid(chest_scene, row, _solid_columns(row, clear).filter(func(column): return column in beside_path))
+	# Coins and keys would draw over the line's label. The coin countdown waits, so the coin due here lands after the line.
+	if on_line:
+		return
 	_place_coins(row)
 	if rows_ahead >= ROWS_BEFORE_ITEMS and randf() < KEY_CHANCE_PER_ROW:
 		# On the path column the coins aren't using.
