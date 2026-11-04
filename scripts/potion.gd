@@ -1,5 +1,6 @@
 extends Area2D
 ## A health potion. It hops out of an opened chest, and picking it up restores a heart.
+## At full health the player walks over it and it stays.
 
 @export var hop_time := 0.6
 @export var hop_height := 24.0
@@ -18,6 +19,5 @@ func hop_to(target: Vector2) -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if overlaps_body(player):
-		player.heal()
+	if overlaps_body(player) and player.heal():
 		queue_free()
