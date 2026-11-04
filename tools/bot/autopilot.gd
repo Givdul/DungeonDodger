@@ -258,7 +258,7 @@ func _observe() -> void:
 	for bomb in _bombs_explode_at:
 		if _bombs_explode_at[bomb] > _now:
 			_bombs.append({position = bomb.global_position, explodes_in = _bombs_explode_at[bomb] - _now,
-				radius = bomb.blast_radius})
+				half_extent = bomb.blast_half_extent})
 
 	_coins.clear()
 	_solids.clear()
@@ -377,7 +377,8 @@ func _add_costs(sim: Sim) -> void:
 		# Even while a hit doesn't count, staying close means another one soon.
 		sim.cost += maxf(ENEMY_COMFORT - gap, 0.0) * ENEMY_PRESSURE * _frame_seconds
 	for bomb in _bombs:
-		if sim.position.distance_to(bomb.position) > bomb.radius + BLAST_MARGIN:
+		var offset: Vector2 = (sim.position - bomb.position).abs()
+		if maxf(offset.x, offset.y) > bomb.half_extent + BLAST_MARGIN:
 			continue
 		if absf(sim.time - bomb.explodes_in) <= BLAST_TIMING_SLACK:
 			_hit(sim)

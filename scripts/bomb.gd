@@ -1,17 +1,18 @@
 extends Node2D
 ## A bomb lobbed in an arc. A marker shows where it will land. It sits there on a
 ## burning fuse, then explodes, hurting the player and killing the enemies in the
-## blast, so the player can lure enemies onto it. Spinners shrug it off.
+## 3x3 tiles around it, so the player can lure enemies onto it. Spinners shrug it off.
 
 signal exploded
 
 @export var flight_time := 0.9
 @export var fuse_time := 2.5
 @export var arc_height := 40.0
-@export var blast_radius := 20.0
+@export var blast_half_extent := 24.0
 
 @onready var bomb: AnimatedSprite2D = $Bomb
 @onready var explosion: AnimatedSprite2D = $Explosion
+@onready var blast_area: Polygon2D = $BlastArea
 
 # The fuse blinks the bomb red, faster as it burns down. The bomb is near black,
 # so the flash has to push past 1 to show.
@@ -21,6 +22,15 @@ const LAST_BLINK_SECONDS := 0.1
 const BLINK_SPEEDUP := 0.8
 # On the floor it draws under the player and enemies, like the plants.
 const LANDED_Z_INDEX := 4
+const BLAST_AREA_COLOR := Color(1, 0.3, 0.2, 0.18)
+
+
+func _ready() -> void:
+	var half := Vector2.ONE * blast_half_extent
+	blast_area.polygon = PackedVector2Array([-half, Vector2(half.x, -half.y), half, Vector2(-half.x, half.y)])
+	blast_area.color = BLAST_AREA_COLOR
+	# The root's scale is only for the sprites: the area is in world pixels.
+	blast_area.scale = Vector2.ONE / scale
 
 
 ## Call after adding the bomb to the tree.
@@ -64,15 +74,22 @@ func _explode() -> void:
 	Haptics.explosion()
 	bomb.hide()
 	$Marker.hide()
+	blast_area.hide()
 	explosion.show()
 	explosion.play()
 	# Spinners have no die(): blasts don't hurt them.
 	for enemy in get_tree().get_nodes_in_group("Enemies"):
-		if enemy.has_method("die") and global_position.distance_to(enemy.global_position) <= blast_radius:
+		if enemy.has_method("die") and _in_blast(enemy.global_position):
 			enemy.die()
 	var player = get_tree().get_first_node_in_group("Player")
-	if global_position.distance_to(player.global_position) <= blast_radius:
+	if _in_blast(player.global_position):
 		player.take_damage()
 	exploded.emit()
 	await explosion.animation_finished
 	queue_free()
+
+
+## The blast is a square, so it reaches the corner tiles.
+func _in_blast(point: Vector2) -> bool:
+	var offset := (point - global_position).abs()
+	return maxf(offset.x, offset.y) <= blast_half_extent
