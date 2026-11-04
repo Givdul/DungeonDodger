@@ -54,7 +54,7 @@ region = Rect2(176, 0, 16, 16)
 [sub_resource type="SpriteFrames" id="SpriteFrames_spikes"]
 animations = [{
 "frames": [{
-"duration": 1.0,
+"duration": 21.0,
 "texture": SubResource("AtlasTexture_spikes0")
 }, {
 "duration": 1.0,
@@ -66,13 +66,13 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_spikes3")
 }, {
-"duration": 1.0,
+"duration": 3.0,
 "texture": SubResource("AtlasTexture_spikes4")
 }, {
-"duration": 1.0,
+"duration": 3.0,
 "texture": SubResource("AtlasTexture_spikes5")
 }, {
-"duration": 1.0,
+"duration": 2.0,
 "texture": SubResource("AtlasTexture_spikes6")
 }, {
 "duration": 1.0,
