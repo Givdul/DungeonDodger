@@ -235,13 +235,13 @@ func _observe() -> void:
 		if _enemy_centers.has(enemy):
 			velocity = (center - _enemy_centers[enemy]) / (_now - _enemy_centers_time)
 		centers[enemy] = center
-		# A waiting rusher charges at the player once it's waited as long as they usually do.
+		# A waiting rusher charges at the player once it's waited as long as they usually do, or a bat on its beat.
 		# Once a bat winds up, its marker shows when and which way it goes.
 		var rushes_in := INF
 		var rush_direction := Vector2.ZERO
 		if Enemies.waits_to_rush(enemy):
 			waiting_since[enemy] = _enemies_waiting_since.get(enemy, _now)
-			rushes_in = maxf(waiting_since[enemy] + Enemies.wait_seconds(enemy) - _now, 0.0)
+			rushes_in = maxf(Enemies.wait_left(enemy, _now - waiting_since[enemy]), 0.0)
 			velocity = Vector2.ZERO
 		elif Enemies.winds_up(enemy):
 			rushes_in = enemy.timer.time_left

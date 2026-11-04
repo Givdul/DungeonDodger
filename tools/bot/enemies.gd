@@ -23,9 +23,10 @@ static func waits_to_rush(enemy: Node) -> bool:
 	return is_spinner(enemy) and enemy.anim.animation == &"idle"
 
 
-## About how long it holds still before it charges.
-static func wait_seconds(enemy: Node) -> float:
-	return enemy.pause_time if is_spinner(enemy) else enemy.lock_time
+## About how much longer it holds still before it charges, having waited for waited seconds.
+## A bat charges on a fixed beat, which a player learns.
+static func wait_left(enemy: Node, waited: float) -> float:
+	return enemy.pause_time - waited if is_spinner(enemy) else enemy.beat_left + enemy.windup_time
 
 
 ## Which way it charges from from at a player at target: a spinner only goes across or along the corridor.

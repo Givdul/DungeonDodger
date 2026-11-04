@@ -1,8 +1,10 @@
 extends Area2D
 
 @export var speed := 104
-@export var lock_time := 1.5
-# The last part of the lock, when the bat flashes and marks its locked-in rush line.
+# Time from one wind-up start to the next, however the rush ended. Keep it longer than
+# windup_time + max_rush_time, or a beat would come during a rush.
+@export var charge_interval := 3.0
+# The bat flashes and marks its locked-in rush line.
 @export var windup_time := 0.5
 # The corridor has no top or bottom wall, so a rush along it may never reach a wall.
 @export var max_rush_time := 1.5
@@ -20,6 +22,9 @@ extends Area2D
 # A bat out of view, or too near the bottom edge to stay in view until its rush, is "entering":
 # it flies at the player, and only locks, winds up and rushes once it's in view.
 var state = "entering"
+# Seconds until the next beat, when a bat in view winds up. It runs through every state, so
+# a rush that ends early just waits longer, and a bat out of view at a beat skips that beat.
+var beat_left := 0.0
 var rush_direction = Vector2.ZERO
 var rush_time_left := 0.0
 var flash_tween: Tween
@@ -29,17 +34,12 @@ var marker_tween: Tween
 const WINDUP_FLASH := Color(4, 1, 1)
 const WINDUP_BLINK_SECONDS := 0.1
 const MARKER_FADE_SECONDS := 0.15
-# A lock lasts lock_time, give or take this share of it.
-const LOCK_TIME_SPREAD := 0.2
 
 func _ready():
 	add_to_group("Bats")
-	timer.connect("timeout", Callable(self, "_on_timer_timeout"))
-
-# Bats that stop at the same spot on the same frame would otherwise rush in
-# lockstep for the rest of the run, looking and acting like one bat.
-func _start_lock_timer():
-	timer.start(lock_time * randf_range(1.0 - LOCK_TIME_SPREAD, 1.0 + LOCK_TIME_SPREAD) - windup_time)
+	timer.connect("timeout", Callable(self, "_start_rush"))
+	# Bats that spawn together would otherwise charge in lockstep for the rest of the run.
+	beat_left = randf() * charge_interval
 
 func _physics_process(delta):
 	if state == "dead":
@@ -65,24 +65,42 @@ func _physics_process(delta):
 	if overlaps_body(player):
 		player.take_damage()
 
+	_tick_beat(delta)
 	match state:
 		"entering":
 			_fly_in(delta)
 		"locking":
-			_face_player()
+			_hold_still()
 		"rushing":
 			_move_rush(delta)
 
-			
-# The view scrolls past a bat standing still, so it locks in the part of the floor band that is still in view when its lock ends.
-func _locking_band() -> Rect2:
-	return game.floor_band(lock_time * (1.0 + LOCK_TIME_SPREAD))
+func _tick_beat(delta):
+	beat_left -= delta
+	if beat_left > 0:
+		return
+	beat_left += charge_interval
+	if _can_wind_up():
+		_start_windup()
+
+func _can_wind_up() -> bool:
+	return (state == "entering" or state == "locking") and _in_view_for_windup()
+
+# The view scrolls past a bat standing still, so a bat only winds up in the part of the floor band that is still in view when its wind-up ends.
+func _windup_band() -> Rect2:
+	return game.floor_band(windup_time)
+
+func _in_view_for_windup() -> bool:
+	return _windup_band().has_point(global_position)
+
+func _hold_still():
+	_face_player()
+	if not _in_view_for_windup():
+		state = "entering"
 
 func _fly_in(delta):
-	var band := _locking_band()
+	var band := _windup_band()
 	if band.has_point(global_position):
 		state = "locking"
-		_start_lock_timer()
 		return
 	_face_player()
 	# The player may stand below the locking band, where the bat would never lock.
@@ -95,13 +113,6 @@ func _face_player():
 		anim.play("idle_right")
 	else:
 		anim.play("idle_left")
-
-func _on_timer_timeout():
-	match state:
-		"locking":
-			_start_windup()
-		"winding_up":
-			_start_rush()
 
 func _start_windup():
 	state = "winding_up"
