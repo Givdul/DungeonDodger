@@ -3,6 +3,8 @@ extends Node2D
 ## burning fuse, then explodes, hurting the player and killing every enemy in the
 ## blast, so the player can lure enemies onto it.
 
+signal exploded
+
 @export var flight_time := 0.9
 @export var fuse_time := 2.5
 @export var arc_height := 40.0
@@ -70,5 +72,6 @@ func _explode() -> void:
 	var player = get_tree().get_first_node_in_group("Player")
 	if global_position.distance_to(player.global_position) <= blast_radius:
 		player.take_damage()
+	exploded.emit()
 	await explosion.animation_finished
 	queue_free()
