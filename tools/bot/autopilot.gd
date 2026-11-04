@@ -297,7 +297,10 @@ func _test_move(from: Vector2, motion: Vector2) -> KinematicCollision2D:
 	var transform := player.global_transform
 	transform.origin = from
 	var collision := KinematicCollision2D.new()
-	return collision if player.test_move(transform, motion, collision) else null
+	if not player.test_move(transform, motion, collision):
+		return null
+	# Spikes are weighed by when they're up in the imagined future, not by whether they are up now.
+	return null if collision.get_collider().get_parent() is Spikes else collision
 
 
 func _may_collide(from: Vector2) -> bool:
@@ -387,7 +390,7 @@ func _add_hazard_cost(sim: Sim) -> void:
 			_fall(sim)
 		else:
 			sim.cost += TRAP_PRESSURE * _frame_seconds
-	elif hazard.is_up_in(sim.time):
+	elif hazard.is_up_in(sim.time) and not hazard.is_up_in(sim.time - _frame_seconds):
 		_hit(sim)
 	else:
 		sim.cost += TRAP_PRESSURE * _frame_seconds

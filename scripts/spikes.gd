@@ -7,10 +7,15 @@ extends AnimatedSprite2D
 # Frames of the strip where the spikes are out.
 const FIRST_UP_FRAME := 7
 const LAST_UP_FRAME := 10
+# The player's body sits above its feet. Just outside the cell, a body can overlap the solid so that
+# Godot pushes it out through the spikes rather than back the way it came, so the cell holds those too.
+const HOLD_MARGIN := 2.0
 
-# Whether the player can still be hurt by this rise.
-var _rise_hurts := false
+var _was_up := false
+# Bodies that stood on the cell as the spikes rose. They pass through until they have left it.
+var _held: Array[CharacterBody2D] = []
 
+@onready var _solid: StaticBody2D = $Solid
 @onready var _solid_shape: CollisionShape2D = $Solid/CollisionShape2D
 # Sees the player and spinners. Its shape is smaller than the solid's, so a body stopped against the
 # raised spikes doesn't count as standing on them.
@@ -22,27 +27,49 @@ func _ready() -> void:
 	# frames, so the long rest gets its share of the starts.
 	var start := _frame_at(randf() * _cycle_seconds())
 	set_frame_and_progress(int(start.x), start.y)
-	frame_changed.connect(_on_frame_changed)
 	play()
 
 
-# Raised spikes turn solid once nothing stands on them, so whoever they rose under can walk off.
 func _physics_process(_delta: float) -> void:
-	if not _is_up_frame(frame):
-		_solid_shape.disabled = true
-	elif _solid_shape.disabled and not _occupants.has_overlapping_bodies():
-		_solid_shape.disabled = false
+	var up := _is_up_frame(frame)
+	if up and not _was_up:
+		_rise()
+	elif _was_up and not up:
+		_lower()
+	_was_up = up
+	_release_departed()
 
 
-func _on_frame_changed() -> void:
-	_rise_hurts = frame == FIRST_UP_FRAME
+# A body whose origin is on the cell is let through until it has left, so it can walk off. Any other
+# body is blocked at once. Only the player is hurt, and only if it stands where hazard_at counts it.
+func _rise() -> void:
+	var size: Vector2 = _solid_shape.shape.size
+	var cell := Rect2(global_position - size / 2, size).grow(HOLD_MARGIN)
+	for body: CharacterBody2D in _occupants.get_overlapping_bodies():
+		if cell.has_point(body.global_position):
+			body.add_collision_exception_with(_solid)
+			_held.append(body)
+		if body.is_in_group(&"Player") and get_parent().hazard_at(body.global_position) == self:
+			body.take_damage()
+	_solid_shape.disabled = false
 
 
-## Called every physics frame the player's feet are on the cell. Only the rise hurts.
-func step_on(player) -> void:
-	if _rise_hurts:
-		_rise_hurts = false
-		player.take_damage()
+func _lower() -> void:
+	_solid_shape.disabled = true
+	for body in _held:
+		if is_instance_valid(body):
+			body.remove_collision_exception_with(_solid)
+	_held.clear()
+
+
+func _release_departed() -> void:
+	var present := _occupants.get_overlapping_bodies()
+	for body in _held.duplicate():
+		if not is_instance_valid(body):
+			_held.erase(body)
+		elif body not in present:
+			body.remove_collision_exception_with(_solid)
+			_held.erase(body)
 
 
 ## Whether the spikes are up after this many seconds, if the trap keeps playing.

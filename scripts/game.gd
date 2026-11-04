@@ -98,7 +98,7 @@ func _physics_process(delta):
 	if player.is_rolling:
 		return
 	var hazard = dungeon.hazard_at(player.position)
-	if hazard:
+	if hazard is Pit:
 		hazard.step_on(player)
 
 
