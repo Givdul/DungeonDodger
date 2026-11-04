@@ -26,7 +26,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if _bomb_out:
+	# The dungeon builds a row above the view: a plant there waits, unseen, until it scrolls in.
+	if _bomb_out or not game.screen_rect().has_point(global_position):
 		return
 	_cooldown -= delta
 	if _cooldown > 0 or player.is_dead:

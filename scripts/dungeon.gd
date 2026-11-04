@@ -111,6 +111,9 @@ const ROWS_BETWEEN_COINS: Array[int] = [1, 2, 2, 3, 4]
 # Rows ahead of the player's start before the first coin.
 const ROWS_BEFORE_FIRST_COIN := 3
 
+# Rows built above the view's top edge, so what spawns just above the view stands on a built row.
+const ROWS_BUILT_ABOVE_VIEW := 1
+
 # Rows are built upward, from the bottom of the view. _next_row is the next one
 # to build and _bottom_row the oldest one still built.
 var _bottom_row: int
@@ -144,7 +147,7 @@ func start(view: Rect2) -> void:
 
 
 func follow(view: Rect2) -> void:
-	while _next_row >= _row_at(view.position.y):
+	while _next_row >= _row_at(view.position.y) - ROWS_BUILT_ABOVE_VIEW:
 		_build_row(_next_row)
 		_next_row -= 1
 	while _bottom_row > _row_at(view.end.y):
@@ -193,6 +196,13 @@ func path_spot_near(point: Vector2) -> Vector2:
 	var origin := local_to_map(point)
 	var cells := _free_cells(origin.y - 3, origin.y + 2).filter(func(cell): return cell.x in _path_columns.get(cell.y, []))
 	return map_to_local(cells.pick_random()) if not cells.is_empty() else point
+
+
+## The centers of plain floor cells in the built row the global y falls in, in global
+## coordinates. Empty when that row isn't built.
+func free_spots_on_row_at(y: float) -> Array:
+	var row := _row_at(to_local(Vector2(0, y)).y)
+	return _free_cells(row, row).map(func(cell): return to_global(map_to_local(cell)))
 
 
 ## The centers of plain floor cells inside the band, in global coordinates.
