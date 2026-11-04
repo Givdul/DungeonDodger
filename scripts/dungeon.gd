@@ -67,6 +67,10 @@ const KEY_CHANCE_PER_ROW := 0.008
 # Pixels in from a hazard cell's edges where the player's feet set it off, so
 # brushing a corner doesn't count.
 const HAZARD_EDGE_GRACE := 3.0
+# Pixels the feet must be from any floor to fall into an open hole. Wider than
+# the trap grace, so the player can run along the rim with most of their body
+# over the dark. Neighbouring holes count as one, so there is no rim between them.
+const HOLE_EDGE_GRACE := 5.0
 
 # Empty rows between one coin and the next, picked from these. The repeated 2
 # makes short gaps likelier, for about 0.3 coins a row.
@@ -116,6 +120,9 @@ func hazard_at(point: Vector2) -> Node2D:
 	var hazard: Node2D = _hazards.get(cell)
 	if hazard == null:
 		return null
+	if _is_open_hole(cell):
+		var feet := Rect2(local, Vector2.ZERO).grow(HOLE_EDGE_GRACE)
+		return hazard if _is_over_open_holes(feet) else null
 	var tile_size := Vector2(tile_set.tile_size)
 	var cell_rect := Rect2(map_to_local(cell) - tile_size / 2, tile_size)
 	return hazard if cell_rect.grow(-HAZARD_EDGE_GRACE).has_point(local) else null
@@ -244,6 +251,21 @@ func _place_solid(scene: PackedScene, row: int, columns: Array) -> Node2D:
 func _is_hole(cell: Vector2i) -> bool:
 	var hazard = _hazards.get(cell)
 	return hazard is Pit and not hazard.crumbles
+
+
+func _is_open_hole(cell: Vector2i) -> bool:
+	var hazard = _hazards.get(cell)
+	return hazard is Pit and hazard.is_open()
+
+
+func _is_over_open_holes(rect: Rect2) -> bool:
+	var first := local_to_map(rect.position)
+	var last := local_to_map(rect.end)
+	for column in range(first.x, last.x + 1):
+		for row in range(first.y, last.y + 1):
+			if not _is_open_hole(Vector2i(column, row)):
+				return false
+	return true
 
 
 func _place_hole(cell: Vector2i) -> void:
