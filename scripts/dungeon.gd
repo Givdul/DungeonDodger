@@ -2,10 +2,13 @@ extends TileMapLayer
 ## The endless corridor: builds rows above the view as it scrolls up and drops
 ## the rows, and everything on them, that scroll off the bottom.
 ##
-## A two-column safe path winds up the corridor and never holds a hazard, so
-## the player can always get through. Coins run along it. The strip along each
-## wall is an open lane too: the player's feet stop past the outermost floor
-## column there, so its hazards never trigger, and nothing solid stands in it.
+## Hazards come in hand-made patterns with plain floor between them. A two-column
+## safe path winds up the corridor and never holds a hazard: it is planned
+## through each pattern's gaps before the pattern is built, so the player can
+## always get through. Coins run along it. The strip along each wall is an open
+## lane too: the player's feet stop past the outermost floor column there, so
+## its hazards never trigger, and nothing solid stands in it. Patterns keep
+## their hazards off those columns, so every hazard drawn can trigger.
 
 signal coin_picked_up
 
@@ -49,15 +52,44 @@ const START_FLOOR_TILES := {".": FLOOR_TILE, "a": Vector2i(8, 11), "b": Vector2i
 const PATH_TURN_CHANCE := 0.25
 # Rows ahead of the player's start with no hazards, so a run opens gently.
 const ROWS_BEFORE_HAZARDS := 12
-# Holes come in clusters: a few seed cells, which spread to the cells ahead of and
-# beside them. The seed chance grows with each row past the opening, up to the max.
-const HOLE_SEED_CHANCE_PER_ROW := 0.00025
-const MAX_HOLE_SEED_CHANCE := 0.035
-const HOLE_SPREAD_CHANCE := 0.55
-# Spikes and cracked floor are scattered one cell at a time, and ramp up the same way.
-const TRAP_CHANCE_PER_ROW := 0.0012
-const MAX_TRAP_CHANCE := 0.18
-const SPIKES_SHARE := 0.5
+
+# Hazard patterns, one string per row from the top, one character per floor column:
+# . plain floor, s spikes, c cracked floor, o hole. A pattern may be mirrored. Every
+# row leaves two adjacent plain columns, and the safe path steers through them. It
+# turns only where both its old and new columns are plain. The outermost columns stay plain.
+const PLAIN := "."
+const PLAIN_ROW := "......"
+const HOLE: Array[String] = [
+	"..oo..",
+	"..o...",
+]
+const SPIKE_ROW: Array[String] = [
+	".sss..",
+]
+const SPIKE_CHECKER: Array[String] = [
+	".s.s..",
+	"..s...",
+	".s.s..",
+]
+const CRACKED_FIELD: Array[String] = [
+	".ccc..",
+	".cc...",
+	".ccc..",
+]
+const CRACKED_RIM_HOLE: Array[String] = [
+	".ccc..",
+	".coc..",
+	".ccc..",
+]
+# Smallest first. The patterns on offer grow from the first FIRST_PATTERN_COUNT to all of
+# them, and the plain rows before each one shrink from the longest gap to the shortest,
+# over the ROWS_TO_FULL_DEPTH rows after the opening. A random 0 to GAP_JITTER_ROWS is added.
+const PATTERNS: Array[Array] = [HOLE, SPIKE_ROW, SPIKE_CHECKER, CRACKED_FIELD, CRACKED_RIM_HOLE]
+const FIRST_PATTERN_COUNT := 2
+const ROWS_TO_FULL_DEPTH := 150
+const LONGEST_GAP_ROWS := 24
+const SHORTEST_GAP_ROWS := 10
+const GAP_JITTER_ROWS := 4
 # Bomberplants are solid, so like hazards they stay off the safe path. Only one
 # grows at a time, so the built rows, and the view, never hold two.
 const ROWS_BEFORE_PLANTS := 30
@@ -87,6 +119,10 @@ var _start_row: int
 var _path_column := randi_range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN - 1)
 # The safe path's columns in each built row.
 var _path_columns: Dictionary[int, Array] = {}
+# The rows still to build, in build order, planned a pattern at a time: plain rows,
+# then the pattern. _planned_path holds the safe path's left column in each.
+var _planned_rows: Array[String] = []
+var _planned_path: Array[int] = []
 var _hazards: Dictionary[Vector2i, Node2D] = {}
 # Bomberplants and chests, which block the cell they stand on.
 var _solids: Dictionary[Vector2i, Node2D] = {}
@@ -192,23 +228,20 @@ func _build_row(row: int) -> void:
 	for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
 		set_cell(Vector2i(column, row), 0, LINE_TILE if on_line else _floor_tile(column, row))
 
-	var path := _advance_path()
+	var hazards := PLAIN_ROW
+	var from := _path_column
+	# A line waits on the planned rows, and the path holds its column through it.
+	if not on_line:
+		hazards = _take_planned_row(row)
+	var path := range(mini(from, _path_column), maxi(from, _path_column) + 2)
 	_path_columns[row] = path
-	# A line keeps its whole row clear, like the path does its columns.
-	var clear := range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1) if on_line else path
-	var rows_ahead := _start_row - row
-	var depth := rows_ahead - ROWS_BEFORE_HAZARDS
-	var hole_seed_chance := clampf(depth * HOLE_SEED_CHANCE_PER_ROW, 0.0, MAX_HOLE_SEED_CHANCE)
-	var trap_chance := clampf(depth * TRAP_CHANCE_PER_ROW, 0.0, MAX_TRAP_CHANCE)
 	for column in range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1):
-		if column in clear:
-			continue
-		var cell := Vector2i(column, row)
-		var beside_hole := _is_hole(cell + Vector2i.DOWN) or _is_hole(cell + Vector2i.LEFT)
-		if randf() < (HOLE_SPREAD_CHANCE if beside_hole else hole_seed_chance):
-			_place_hole(cell)
-		elif randf() < trap_chance:
-			_place_trap(cell)
+		var symbol := hazards[column - FIRST_FLOOR_COLUMN]
+		if symbol != PLAIN:
+			_place_hazard(Vector2i(column, row), symbol)
+	var rows_ahead := _start_row - row
+	# A line or a pattern keeps its whole row clear of solids, like the path does its columns.
+	var clear := range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1) if on_line or hazards != PLAIN_ROW else path
 	if rows_ahead >= ROWS_BEFORE_PLANTS and not is_instance_valid(_plant) and randf() < PLANT_CHANCE_PER_ROW:
 		_plant = _place_solid(bomberplant_scene, row, _solid_columns(row, clear))
 	if _key_found and rows_ahead >= ROWS_BEFORE_ITEMS and randf() < CHEST_CHANCE_PER_ROW:
@@ -236,14 +269,81 @@ func _floor_tile(column: int, row: int) -> Vector2i:
 	return FLOOR_TILE
 
 
-# Returns the columns this row keeps clear. When the path shifts a column, the row
-# it shifts on keeps both the old and the new columns clear, so the path stays
-# two tiles wide through the turn.
-func _advance_path() -> Array:
-	var from := _path_column
-	if randf() < PATH_TURN_CHANCE:
-		_path_column = clampi(_path_column + [-1, 1].pick_random(), FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN - 1)
-	return range(mini(from, _path_column), maxi(from, _path_column) + 2)
+# Takes the next planned row, planning the next pattern first if none is left, and
+# moves the safe path to its column.
+func _take_planned_row(row: int) -> String:
+	if _planned_rows.is_empty():
+		_plan_pattern(row)
+	_path_column = _planned_path.pop_front()
+	return _planned_rows.pop_front()
+
+
+# Plans the plain rows and then a pattern, from the bottom up, with the safe path
+# through all of them. Before the opening ends the plain rows run up to it.
+func _plan_pattern(row: int) -> void:
+	var depth := _start_row - row - ROWS_BEFORE_HAZARDS
+	var progress := clampf(float(depth) / ROWS_TO_FULL_DEPTH, 0.0, 1.0)
+	var gap := -depth if depth < 0 else roundi(lerpf(LONGEST_GAP_ROWS, SHORTEST_GAP_ROWS, progress)) + randi_range(0, GAP_JITTER_ROWS)
+	_planned_rows.resize(gap)
+	_planned_rows.fill(PLAIN_ROW)
+	var pattern: Array = PATTERNS.slice(0, ceili(lerpf(FIRST_PATTERN_COUNT, PATTERNS.size(), progress))).pick_random()
+	var mirrored := randi_range(0, 1) == 1
+	# A pattern is written from its top row, and built from its bottom row.
+	for index in range(pattern.size() - 1, -1, -1):
+		var pattern_row: String = pattern[index]
+		_planned_rows.append(_mirror(pattern_row) if mirrored else pattern_row)
+	var plan: Array[int] = [_path_column]
+	var found := _extend_path(plan, {})
+	assert(found, "A pattern leaves no safe path through it.")
+	_planned_path = plan.slice(1)
+
+
+func _mirror(pattern_row: String) -> String:
+	var mirrored := ""
+	for index in range(pattern_row.length() - 1, -1, -1):
+		mirrored += pattern_row[index]
+	return mirrored
+
+
+# Appends to the path, which starts as its column before the first planned row, a
+# left column for every planned row, each within a step of the one before. It stays on plain
+# floor, and so does every column it turns across. Returns false if the planned rows
+# leave it no way through. dead_ends holds the rows and columns already found to lead nowhere.
+func _extend_path(path: Array[int], dead_ends: Dictionary) -> bool:
+	var row := path.size() - 1
+	if row == _planned_rows.size():
+		return true
+	var from: int = path.back()
+	if dead_ends.has(Vector2i(row, from)):
+		return false
+	for to in _path_moves(from):
+		if _is_lane_plain(_planned_rows[row], from, to):
+			path.append(to)
+			if _extend_path(path, dead_ends):
+				return true
+			path.pop_back()
+	dead_ends[Vector2i(row, from)] = true
+	return false
+
+
+# The columns the path may take from here, the one it would most likely take first.
+func _path_moves(from: int) -> Array[int]:
+	var turn := clampi(from + [-1, 1].pick_random(), FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN - 1)
+	var likeliest := [turn, from] if randf() < PATH_TURN_CHANCE else [from, turn]
+	var moves: Array[int] = []
+	for column in likeliest + [from - 1, from + 1]:
+		if column not in moves and column >= FIRST_FLOOR_COLUMN and column < LAST_FLOOR_COLUMN:
+			moves.append(column)
+	return moves
+
+
+# Whether the path can step from one column to another across this row. Both pairs of columns it
+# covers have to be plain, as a turn row keeps both old and new columns clear.
+func _is_lane_plain(row: String, from: int, to: int) -> bool:
+	for column in range(mini(from, to), maxi(from, to) + 2):
+		if row[column - FIRST_FLOOR_COLUMN] != PLAIN:
+			return false
+	return true
 
 
 # Off the path and the outermost floor columns, so solids never block the wall lanes.
@@ -264,11 +364,6 @@ func _place_solid(scene: PackedScene, row: int, columns: Array) -> Node2D:
 	return solid
 
 
-func _is_hole(cell: Vector2i) -> bool:
-	var hazard = _hazards.get(cell)
-	return hazard is Pit and not hazard.crumbles
-
-
 func _is_open_hole(cell: Vector2i) -> bool:
 	var hazard = _hazards.get(cell)
 	return hazard is Pit and hazard.is_open()
@@ -284,20 +379,17 @@ func _is_over_open_holes(rect: Rect2) -> bool:
 	return true
 
 
-func _place_hole(cell: Vector2i) -> void:
-	_place_hazard(cell, pit_scene.instantiate())
-
-
-func _place_trap(cell: Vector2i) -> void:
-	if randf() < SPIKES_SHARE:
-		_place_hazard(cell, spikes_scene.instantiate())
-	else:
-		var cracked_floor: Pit = pit_scene.instantiate()
-		cracked_floor.crumbles = true
-		_place_hazard(cell, cracked_floor)
-
-
-func _place_hazard(cell: Vector2i, hazard: Node2D) -> void:
+func _place_hazard(cell: Vector2i, symbol: String) -> void:
+	var hazard: Node2D
+	match symbol:
+		"s":
+			hazard = spikes_scene.instantiate()
+		"o":
+			hazard = pit_scene.instantiate()
+		"c":
+			var cracked_floor: Pit = pit_scene.instantiate()
+			cracked_floor.crumbles = true
+			hazard = cracked_floor
 	hazard.position = map_to_local(cell)
 	add_child(hazard)
 	_hazards[cell] = hazard
