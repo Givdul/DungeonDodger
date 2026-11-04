@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
-@export var speed := 45
+# Well under the player's SPEED, but well over max_scroll_speed in game.gd, so a phantom left behind still catches up.
+@export var speed := 36
 # Phantoms closer than this push each other apart, so a group fans out around the player.
 const SEPARATION_RADIUS := 24.0
 # How far to the side of the player a phantom aims when far away; the offset is gone
