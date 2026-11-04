@@ -1,6 +1,7 @@
 [gd_scene load_steps=28 format=3 uid="uid://k04h7rp2d3ry"]
 
 [ext_resource type="Script" path="res://scripts/phantom.gd" id="1_7rjmw"]
+[ext_resource type="Script" path="res://scripts/floor_shadow.gd" id="shadow_script"]
 [ext_resource type="Texture2D" uid="uid://csv874awpv8be" path="res://assets/sprites/Enemies_Sprites/Phantom_Sprites/phantom_idle_anim_left_strip_4.png" id="1_ql3k0"]
 [ext_resource type="Texture2D" uid="uid://cry738yakchqy" path="res://assets/sprites/Enemies_Sprites/Phantom_Sprites/phantom_idle_anim_right_strip_4.png" id="2_7p3bu"]
 [ext_resource type="Texture2D" uid="uid://d1bhwo10vmg15" path="res://assets/sprites/Enemies_Sprites/Phantom_Sprites/phantom_run_anim_left_strip_6.png" id="3_t1tgd"]
@@ -307,6 +308,11 @@ script = ExtResource("1_7rjmw")
 z_index = 1
 position = Vector2(0, -1)
 shape = SubResource("CircleShape2D_p63es")
+
+[node name="FloorShadow" type="Node2D" parent="."]
+show_behind_parent = true
+position = Vector2(0, 9)
+script = ExtResource("shadow_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_jsnyy")
