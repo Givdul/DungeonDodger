@@ -74,17 +74,21 @@ func _physics_process(delta):
 			_move_rush(delta)
 
 			
-# The view scrolls past a bat standing still, so it has to be in view now and when its lock ends.
-func _will_stay_in_view() -> bool:
-	return game.floor_band(lock_time * (1.0 + LOCK_TIME_SPREAD)).has_point(global_position)
+# The view scrolls past a bat standing still, so it locks in the part of the floor band that is still in view when its lock ends.
+func _locking_band() -> Rect2:
+	return game.floor_band(lock_time * (1.0 + LOCK_TIME_SPREAD))
 
 func _fly_in(delta):
-	if _will_stay_in_view():
+	var band := _locking_band()
+	if band.has_point(global_position):
 		state = "locking"
 		_start_lock_timer()
 		return
 	_face_player()
-	global_position += global_position.direction_to(player.global_position) * speed * delta
+	# The player may stand below the locking band, where the bat would never lock.
+	var inner := band.grow(-1.0)
+	var target: Vector2 = player.global_position.clamp(inner.position, inner.end)
+	global_position += global_position.direction_to(target) * speed * delta
 
 func _face_player():
 	if player.global_position.x >= global_position.x:

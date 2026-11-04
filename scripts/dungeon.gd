@@ -198,6 +198,13 @@ func path_spot_near(point: Vector2) -> Vector2:
 	return map_to_local(cells.pick_random()) if not cells.is_empty() else point
 
 
+## The centers of plain floor cells in the built row the global y falls in, in global
+## coordinates. Empty when that row isn't built.
+func free_spots_on_row_at(y: float) -> Array:
+	var row := _row_at(to_local(Vector2(0, y)).y)
+	return _free_cells(row, row).map(func(cell): return to_global(map_to_local(cell)))
+
+
 ## The centers of plain floor cells inside the band, in global coordinates.
 func free_spots_in(band: Rect2) -> Array:
 	var cells := _free_cells(_row_at(to_local(band.position).y), _row_at(to_local(band.end).y))

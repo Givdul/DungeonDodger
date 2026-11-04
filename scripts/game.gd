@@ -45,7 +45,6 @@ const VIEW_BOTTOM_MARGIN := 8.0
 # How far past the screen's top or bottom edge an enemy spawns: about half its sprite, so it
 # starts out of sight. Keep it under a tile row, which the dungeon builds above the view.
 const ENEMY_SPAWN_MARGIN := 12.0
-const ENEMY_SPAWN_ATTEMPTS := 10
 # A push the player can't follow by more than this means something solid is in
 # the way, and the scroll edge crushes them.
 const CRUSH_TOLERANCE := 1.0
@@ -233,18 +232,16 @@ func _lay_new_high_score_line() -> void:
 
 
 # Just past the top or bottom edge of the screen, whichever is further from the player,
-# between the walls and on free floor where the dungeon has some.
+# between the walls and on free floor where the dungeon has built the row.
 func _enemy_spawn_point() -> Vector2:
 	var screen := screen_rect()
 	var from_top: bool = player.global_position.y > screen.get_center().y
 	var y := screen.position.y - ENEMY_SPAWN_MARGIN if from_top else screen.end.y + ENEMY_SPAWN_MARGIN
-	var area := playable_area()
-	var point := Vector2(randf_range(area.position.x, area.end.x), y)
-	for _attempt in ENEMY_SPAWN_ATTEMPTS:
-		if dungeon.is_free(point):
-			break
-		point.x = randf_range(area.position.x, area.end.x)
-	return point
+	var spots: Array = dungeon.free_spots_on_row_at(y)
+	if spots.is_empty():
+		var area := playable_area()
+		return Vector2(randf_range(area.position.x, area.end.x), y)
+	return Vector2(spots.pick_random().x, y)
 
 
 func spawn_enemy(enemy_scene: PackedScene):
