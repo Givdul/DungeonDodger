@@ -36,6 +36,10 @@ const CONTACT_MARGIN := 3.0
 const BLAST_MARGIN := 4.0
 # How far off its guess of when a bomb blows can be.
 const BLAST_TIMING_SLACK := 0.1
+# How far off its guess of when spikes rise can be, which is a hit to whoever stands on the cell then.
+const SPIKE_RISE_SLACK := 0.1
+# How much smaller the spikes' Occupants area is than their solid, on each side.
+const SPIKES_OCCUPANTS_INSET := 1.0
 const BOMB_PRESSURE := 60.0
 const TRAP_PRESSURE := 40.0
 const EDGE_COMFORT := 30.0
@@ -112,6 +116,7 @@ var _enemies: Array[Dictionary] = []
 var _bombs: Array[Dictionary] = []
 var _coins: Array[Vector2] = []
 var _solids: Array[Vector2] = []
+var _spikes: Array[Spikes] = []
 
 @onready var game: Node2D = get_parent()
 @onready var player: CharacterBody2D = game.player
@@ -257,12 +262,15 @@ func _observe() -> void:
 
 	_coins.clear()
 	_solids.clear()
+	_spikes.clear()
 	var reach: float = (reaction_seconds + lookahead_seconds) * player.SPEED + SOLID_RANGE
 	for child in dungeon.get_children():
 		if child.global_position.distance_to(player.global_position) > reach:
 			continue
 		if child is StaticBody2D:
 			_solids.append(child.global_position)
+		elif child is Spikes:
+			_spikes.append(child)
 		elif child.scene_file_path == COIN_SCENE and not child.picked_up_already:
 			_coins.append(child.get_node("CollisionShape2D").global_position)
 
@@ -279,7 +287,9 @@ func _advance(sim: Sim, direction: Vector2, end_frame: int) -> void:
 		sim.frame += 1
 		sim.time = sim.frame * _frame_seconds
 		var collision := _test_move(sim.position, motion)
-		sim.position += collision.get_travel() if collision else motion
+		var next := sim.position + (collision.get_travel() if collision else motion)
+		if not _enters_raised_spikes(sim.position, next, sim.time):
+			sim.position = next
 		_follow_scroll(sim)
 		if not sim.ended:
 			_add_costs(sim)
@@ -291,7 +301,10 @@ func _test_move(from: Vector2, motion: Vector2) -> KinematicCollision2D:
 	var transform := player.global_transform
 	transform.origin = from
 	var collision := KinematicCollision2D.new()
-	return collision if player.test_move(transform, motion, collision) else null
+	if not player.test_move(transform, motion, collision):
+		return null
+	# Spikes are weighed by when they're up in the imagined future, not by whether they are up now.
+	return null if collision.get_collider().get_parent() is Spikes else collision
 
 
 func _may_collide(from: Vector2) -> bool:
@@ -300,16 +313,44 @@ func _may_collide(from: Vector2) -> bool:
 	return _solids.any(func(solid): return from.distance_to(solid) < SOLID_RANGE)
 
 
+# Spikes that will be up by then stop the player's body at their edge. One they rose over, which
+# overlaps their Occupants area, passes.
+func _enters_raised_spikes(from: Vector2, to: Vector2, time: float) -> bool:
+	for spikes in _spikes:
+		if not spikes.is_up_in(time):
+			continue
+		var from_gap := _gap_to(spikes, from)
+		var to_gap := _gap_to(spikes, to)
+		if from_gap >= -SPIKES_OCCUPANTS_INSET and to_gap < 0.0 and to_gap < from_gap:
+			return true
+	return false
+
+
+func _cell(spikes: Spikes) -> Rect2:
+	var tile_size := Vector2(dungeon.tile_set.tile_size)
+	return Rect2(spikes.global_position - tile_size / 2, tile_size)
+
+
+# How far the player's body is from the spikes' cell, below zero while they overlap.
+func _gap_to(spikes: Spikes, feet: Vector2) -> float:
+	var cell := _cell(spikes)
+	var body := feet + _body.position * player.scale
+	return body.distance_to(body.clamp(cell.position, cell.end)) - _radius(_body)
+
+
 func _follow_scroll(sim: Sim) -> void:
 	var shift := _scroll_speed * sim.time
 	var bottom := _band.end.y - shift
 	if sim.position.y > bottom:
 		var push := Vector2(0, bottom - sim.position.y)
 		var collision := _test_move(sim.position, push)
-		if collision and collision.get_remainder().length() > game.CRUSH_TOLERANCE:
+		var blocked := _enters_raised_spikes(sim.position, sim.position + push, sim.time)
+		if (blocked and push.length() > game.CRUSH_TOLERANCE) \
+				or (collision and collision.get_remainder().length() > game.CRUSH_TOLERANCE):
 			_die(sim)
 			return
-		sim.position += collision.get_travel() if collision else push
+		if not blocked:
+			sim.position += collision.get_travel() if collision else push
 	sim.position.y = maxf(sim.position.y, _band.position.y - shift)
 
 
@@ -362,7 +403,7 @@ func _add_hazard_cost(sim: Sim) -> void:
 			_fall(sim)
 		else:
 			sim.cost += TRAP_PRESSURE * _frame_seconds
-	elif hazard.is_up_in(sim.time):
+	elif hazard.is_up_in(sim.time + SPIKE_RISE_SLACK) and not hazard.is_up_in(sim.time - SPIKE_RISE_SLACK):
 		_hit(sim)
 	else:
 		sim.cost += TRAP_PRESSURE * _frame_seconds

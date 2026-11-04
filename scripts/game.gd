@@ -94,11 +94,11 @@ func _physics_process(delta):
 	if player.is_falling:
 		return
 	_keep_player_in_view()
-	# A roll carries the player over holes and traps without setting them off.
+	# A roll carries the player over holes and traps without setting them off. Raised spikes stop it.
 	if player.is_rolling:
 		return
 	var hazard = dungeon.hazard_at(player.position)
-	if hazard:
+	if hazard is Pit:
 		hazard.step_on(player)
 
 
