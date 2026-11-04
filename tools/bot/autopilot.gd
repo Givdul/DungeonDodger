@@ -16,7 +16,9 @@ const DIRECTIONS: Dictionary[StringName, Vector2] = {
 }
 
 ## plan_depth is how many turns it plans within the lookahead. A lapse skips a
-## decision, like a player who looks away.
+## decision, like a player who looks away. These are real time, since a person
+## doesn't slow down with the game: physics ticks keep their rate at any
+## Engine.time_scale, and only their delta shrinks.
 const SKILLS := {
 	"casual": {reaction_seconds = 0.4, decision_frames = 8, lookahead_seconds = 0.6, plan_depth = 2, lapse_chance = 0.1},
 	"good": {reaction_seconds = 0.2, decision_frames = 3, lookahead_seconds = 0.8, plan_depth = 2, lapse_chance = 0.0},
@@ -55,7 +57,7 @@ const TURN_THRESHOLD := 0.5
 ## One imagined future of the player's feet, and what it ran into.
 class Sim:
 	var position: Vector2
-	# Frames after the one it started from, and the seconds they add up to.
+	# Frames after the one it started from, and the game seconds they add up to.
 	var frame := 0
 	var time := 0.0
 	var cost := 0.0
@@ -94,7 +96,8 @@ var plan_depth: int
 var lapse_chance: float
 
 var _rng := RandomNumberGenerator.new()
-var _frame_seconds := 1.0 / Engine.physics_ticks_per_second
+# Game seconds per frame.
+var _frame_seconds: float
 var _reaction_frames: int
 var _lookahead_frames: int
 var _frames := 0
@@ -129,8 +132,8 @@ var _spikes: Array[Spikes] = []
 func setup(skill: String, rng_seed: int) -> void:
 	for setting in SKILLS[skill]:
 		set(setting, SKILLS[skill][setting])
-	_reaction_frames = roundi(reaction_seconds / _frame_seconds)
-	_lookahead_frames = roundi(lookahead_seconds / _frame_seconds)
+	_reaction_frames = roundi(reaction_seconds * Engine.physics_ticks_per_second)
+	_lookahead_frames = roundi(lookahead_seconds * Engine.physics_ticks_per_second)
 	_rng.seed = rng_seed
 
 
@@ -140,8 +143,9 @@ func _ready() -> void:
 	dungeon.child_entered_tree.connect(_on_dungeon_child_added)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	_frames += 1
+	_frame_seconds = delta
 	_now = _frames * _frame_seconds
 	# The player blinks while hits don't count, so a person knows how long that lasts.
 	if player.is_invulnerable and not _was_invulnerable:
@@ -263,7 +267,7 @@ func _observe() -> void:
 	_coins.clear()
 	_solids.clear()
 	_spikes.clear()
-	var reach: float = (reaction_seconds + lookahead_seconds) * player.SPEED + SOLID_RANGE
+	var reach: float = _plan_seconds() * player.SPEED + SOLID_RANGE
 	for child in dungeon.get_children():
 		if child.global_position.distance_to(player.global_position) > reach:
 			continue
@@ -388,7 +392,7 @@ func _add_costs(sim: Sim) -> void:
 		if not sim.coins_taken.has(coin) and body.distance_to(coin) < _radius(_body) + COIN_RADIUS:
 			sim.coins_taken[coin] = true
 			# Sooner coins are surer coins.
-			sim.cost -= COIN_VALUE * (1.0 - sim.time / (2.0 * (reaction_seconds + lookahead_seconds)))
+			sim.cost -= COIN_VALUE * (1.0 - sim.time / (2.0 * _plan_seconds()))
 	# The scroll edges leave no room to dodge: the top one holds the player back, the bottom one pushes.
 	var shift := _scroll_speed * sim.time
 	var to_edge := minf(sim.position.y - (_band.position.y - shift), _band.end.y - shift - sim.position.y)
@@ -447,4 +451,9 @@ func _die(sim: Sim) -> void:
 
 # Trouble that comes sooner weighs more, so when every way ends in a hit it takes the latest one.
 func _urgency(sim: Sim) -> float:
-	return 1.5 - sim.time / (reaction_seconds + lookahead_seconds)
+	return 1.5 - sim.time / _plan_seconds()
+
+
+# How many game seconds a plan reaches ahead, which is what sim.time counts up to.
+func _plan_seconds() -> float:
+	return (_reaction_frames + _lookahead_frames) * _frame_seconds
