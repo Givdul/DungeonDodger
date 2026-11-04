@@ -286,7 +286,7 @@ func _plan_pattern(row: int) -> void:
 	var gap := -depth if depth < 0 else roundi(lerpf(LONGEST_GAP_ROWS, SHORTEST_GAP_ROWS, progress)) + randi_range(0, GAP_JITTER_ROWS)
 	_planned_rows.resize(gap)
 	_planned_rows.fill(PLAIN_ROW)
-	var pattern: Array = PATTERNS.slice(0, ceili(lerpf(FIRST_PATTERN_COUNT, PATTERNS.size(), progress))).pick_random()
+	var pattern: Array = PATTERNS.slice(0, mini(floori(lerpf(FIRST_PATTERN_COUNT, PATTERNS.size() + 1, progress)), PATTERNS.size())).pick_random()
 	var mirrored := randi_range(0, 1) == 1
 	# A pattern is written from its top row, and built from its bottom row.
 	for index in range(pattern.size() - 1, -1, -1):
