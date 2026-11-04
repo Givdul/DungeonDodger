@@ -76,6 +76,7 @@ func die():
 	if is_dead:
 		return
 	is_dead = true
+	$DeathSound.play_death()
 	anim.play("death_right" if last_facing_right else "death_left")
 	await anim.animation_finished
 	queue_free()
