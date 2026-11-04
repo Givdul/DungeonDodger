@@ -18,6 +18,12 @@ FONT
 Pixel Operator by Jayvee Enaguas
 License: CC0 1.0"""
 
+const HINTS: PackedStringArray = [
+	"Phantoms and bats die from being hit by explosions",
+	"Spinners can fall into holes",
+	"A key opens a chest containing a health potion",
+]
+
 # Root lays the UI out at a quarter of the viewport's size and draws it 4x.
 const UI_SCALE := 4.0
 
@@ -26,6 +32,9 @@ const COUNTDOWN_STEP := 0.5
 
 var state := State.START
 var _countdown: Tween
+# Game overs step through the hints from a random one, so two in a row never repeat.
+# Static so it survives reload_current_scene() on restart.
+static var _hint_index := randi() % HINTS.size()
 
 @onready var root: Control = $Root
 @onready var hud_area: Control = %HudArea
@@ -38,6 +47,7 @@ var _countdown: Tween
 @onready var credits_screen: Control = %CreditsScreen
 @onready var credits_text: Label = %CreditsText
 @onready var countdown_label: Label = %CountdownLabel
+@onready var hint_label: Label = %HintLabel
 
 
 func _ready() -> void:
@@ -100,6 +110,8 @@ func show_game_over(score: int, high_score: int, is_new_best: bool) -> void:
 	%FinalScoreLabel.text = "SCORE %d" % score
 	%GameOverBestLabel.text = "BEST %d" % high_score
 	%NewBestLabel.visible = is_new_best
+	_hint_index = (_hint_index + 1) % HINTS.size()
+	hint_label.text = "Hint: " + HINTS[_hint_index]
 	_set_state(State.GAME_OVER)
 
 
@@ -116,6 +128,7 @@ func _set_state(new_state: State) -> void:
 	pause_screen.visible = state == State.PAUSED
 	countdown_label.visible = state == State.RESUMING
 	game_over_screen.visible = state == State.GAME_OVER
+	hint_label.visible = state == State.GAME_OVER
 	credits_screen.visible = state == State.CREDITS
 	# Built on first open: the engine notices are ~80 KB of text to shape.
 	if state == State.CREDITS and credits_text.text.is_empty():

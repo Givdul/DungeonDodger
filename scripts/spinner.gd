@@ -1,7 +1,7 @@
 extends CharacterBody2D
 ## Moves like a rook: picks the straight line, across or along the corridor, that
 ## brings it closest to the player, and spins down it until it crashes into
-## something solid or runs out of time.
+## something solid or runs out of time. Bombs don't hurt it; only a hole kills it.
 
 @export var speed := 76.0
 # The corridor has no top or bottom wall, so a run along it may never reach anything solid.
@@ -69,13 +69,3 @@ func fall_into(hole_center: Vector2) -> void:
 	tween.tween_property(self, "scale", Vector2.ZERO, FALL_SECONDS).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	tween.parallel().tween_property(self, "modulate", Color.BLACK, FALL_SECONDS)
 	tween.tween_callback(queue_free)
-
-
-func die() -> void:
-	if is_dead:
-		return
-	is_dead = true
-	$DeathSound.play_death()
-	anim.play(&"death")
-	await anim.animation_finished
-	queue_free()
