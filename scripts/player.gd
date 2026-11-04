@@ -18,7 +18,7 @@ var current_lives : int
 var direction := Vector2.ZERO
 var last_direction := Vector2.DOWN  # Default facing down
 
-const SPEED := 130
+const SPEED := 90
 # Enemies deal damage on every frame of contact, so this is what spaces hits apart.
 const BLINKS := 6
 const BLINK_SECONDS := 0.25
@@ -28,8 +28,8 @@ const FALL_SLIDE_SECONDS := 0.12
 # The fall strip shrinks toward the bottom of its frame, this far above the feet.
 const FALL_SPRITE_RISE := 2.0
 const ROLL_SECONDS := 0.25
-# A roll ends this far ahead of where running would have taken the player.
-const ROLL_EXTRA_DISTANCE := 32.0
+# A roll ends this far ahead of where running would have taken the player. Tuned with SPEED so a roll covers about 4 tiles.
+const ROLL_EXTRA_DISTANCE := 41.0
 const ROLL_SPEED := SPEED + ROLL_EXTRA_DISTANCE / ROLL_SECONDS
 const ROLL_COOLDOWN_SECONDS := 1.5
 const ROLL_SQUASH := Vector2(1.25, 0.75)
