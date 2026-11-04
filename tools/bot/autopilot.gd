@@ -112,6 +112,7 @@ var _enemies: Array[Dictionary] = []
 var _bombs: Array[Dictionary] = []
 var _coins: Array[Vector2] = []
 var _solids: Array[Vector2] = []
+var _spikes: Array[Spikes] = []
 
 @onready var game: Node2D = get_parent()
 @onready var player: CharacterBody2D = game.player
@@ -257,12 +258,15 @@ func _observe() -> void:
 
 	_coins.clear()
 	_solids.clear()
+	_spikes.clear()
 	var reach: float = (reaction_seconds + lookahead_seconds) * player.SPEED + SOLID_RANGE
 	for child in dungeon.get_children():
 		if child.global_position.distance_to(player.global_position) > reach:
 			continue
 		if child is StaticBody2D:
 			_solids.append(child.global_position)
+		elif child is Spikes:
+			_spikes.append(child)
 		elif child.scene_file_path == COIN_SCENE and not child.picked_up_already:
 			_coins.append(child.get_node("CollisionShape2D").global_position)
 
@@ -279,7 +283,9 @@ func _advance(sim: Sim, direction: Vector2, end_frame: int) -> void:
 		sim.frame += 1
 		sim.time = sim.frame * _frame_seconds
 		var collision := _test_move(sim.position, motion)
-		sim.position += collision.get_travel() if collision else motion
+		var next := sim.position + (collision.get_travel() if collision else motion)
+		if not _enters_raised_spikes(sim.position, next, sim.time):
+			sim.position = next
 		_follow_scroll(sim)
 		if not sim.ended:
 			_add_costs(sim)
@@ -300,16 +306,35 @@ func _may_collide(from: Vector2) -> bool:
 	return _solids.any(func(solid): return from.distance_to(solid) < SOLID_RANGE)
 
 
+# Spikes that will be up by then stop the player's body at their edge. Spikes the body is already
+# touching let it walk off, as in the game.
+func _enters_raised_spikes(from: Vector2, to: Vector2, time: float) -> bool:
+	for spikes in _spikes:
+		if spikes.is_up_in(time) and not _touches(spikes, from) and _touches(spikes, to):
+			return true
+	return false
+
+
+func _touches(spikes: Spikes, feet: Vector2) -> bool:
+	var tile_size := Vector2(dungeon.tile_set.tile_size)
+	var cell := Rect2(spikes.global_position - tile_size / 2, tile_size)
+	var body := feet + _body.position * player.scale
+	return body.distance_to(body.clamp(cell.position, cell.end)) < _radius(_body)
+
+
 func _follow_scroll(sim: Sim) -> void:
 	var shift := _scroll_speed * sim.time
 	var bottom := _band.end.y - shift
 	if sim.position.y > bottom:
 		var push := Vector2(0, bottom - sim.position.y)
 		var collision := _test_move(sim.position, push)
-		if collision and collision.get_remainder().length() > game.CRUSH_TOLERANCE:
+		var blocked := _enters_raised_spikes(sim.position, sim.position + push, sim.time)
+		if (blocked and push.length() > game.CRUSH_TOLERANCE) \
+				or (collision and collision.get_remainder().length() > game.CRUSH_TOLERANCE):
 			_die(sim)
 			return
-		sim.position += collision.get_travel() if collision else push
+		if not blocked:
+			sim.position += collision.get_travel() if collision else push
 	sim.position.y = maxf(sim.position.y, _band.position.y - shift)
 
 
