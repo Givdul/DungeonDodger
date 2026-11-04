@@ -215,6 +215,7 @@ func _on_point_picked_up():
 		return
 	if point_count % POINTS_PER_ENEMY != 0:
 		return
+	@warning_ignore("integer_division")
 	spawn_enemy(_enemy_scene_for_milestone(point_count / POINTS_PER_ENEMY))
 
 
