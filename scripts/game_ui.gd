@@ -30,6 +30,10 @@ const UI_SCALE := 4.0
 const COUNTDOWN_FROM := 3
 const COUNTDOWN_STEP := 0.5
 
+# How fast the game runs while playing. Engine.time_scale is global and survives
+# reload_current_scene(), so _set_state sets it on every state change.
+const PLAYING_TIME_SCALE := 0.7
+
 var state := State.START
 var _countdown: Tween
 # Game overs step through the hints from a random one, so two in a row never repeat.
@@ -121,6 +125,7 @@ func _set_state(new_state: State) -> void:
 	state = new_state
 	var playing := state == State.PLAYING
 	get_tree().paused = not playing
+	Engine.time_scale = PLAYING_TIME_SCALE if playing else 1.0
 	pause_button.visible = playing
 	mute_button.visible = not playing and state != State.CREDITS and state != State.RESUMING
 	dim.visible = not playing

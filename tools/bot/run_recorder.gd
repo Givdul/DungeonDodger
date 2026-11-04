@@ -46,7 +46,8 @@ func _physics_process(delta: float) -> void:
 	# The view holds still until the first move.
 	if not game.run_started:
 		return
-	survival_seconds += delta
+	# Real seconds, whatever the time scale.
+	survival_seconds += delta / Engine.time_scale
 	var view: Rect2 = game.view_rect()
 	var plants := dungeon.get_children().filter(func(child): return child.scene_file_path == BOMBERPLANT_SCENE \
 		and view.has_point(child.global_position))
