@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var speed := 150
+@export var speed := 104
 @export var lock_time := 1.5
 # The last part of the lock, when the bat flashes and marks its locked-in rush line.
 @export var windup_time := 0.5

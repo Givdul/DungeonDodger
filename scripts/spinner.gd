@@ -3,7 +3,7 @@ extends CharacterBody2D
 ## brings it closest to the player, and spins down it until it crashes into
 ## something solid or runs out of time.
 
-@export var speed := 110.0
+@export var speed := 76.0
 # The corridor has no top or bottom wall, so a run along it may never reach anything solid.
 @export var max_run_time := 3.0
 @export var pause_time := 0.7
