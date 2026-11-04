@@ -32,10 +32,10 @@ const ROLL_SECONDS := 0.25
 const ROLL_EXTRA_DISTANCE := 41.0
 const ROLL_SPEED := SPEED + ROLL_EXTRA_DISTANCE / ROLL_SECONDS
 const ROLL_COOLDOWN_SECONDS := 1.5
-const ROLL_SQUASH := Vector2(1.25, 0.75)
-const ROLL_ANIMATION_SPEED := 2.0
-# The squash scales about the sprite's center, so this keeps its feet on the floor.
-const ROLL_SQUASH_SHIFT := Vector2(0, 2.0)
+# Rolling up or down also curls into a ball this size, halfway through the roll.
+const ROLL_BALL_SCALE := 0.75
+# The sprite frame is 16 px tall and scales about its center, so the center drops by this much of the shrink to keep the feet on the floor.
+const SPRITE_HALF_HEIGHT := 8.0
 const RUN_ANIMATIONS := {Vector2.UP: &"run_up", Vector2.DOWN: &"run_down", Vector2.LEFT: &"run_left", Vector2.RIGHT: &"run_right"}
 var is_dead := false
 var is_falling := false
@@ -197,20 +197,25 @@ func roll():
 	roll_seconds_left = ROLL_SECONDS
 	roll_cooldown_left = ROLL_COOLDOWN_SECONDS
 	roll_ready_changed.emit(false)
-	# The run strip is already playing in this direction, sped up and squashed it reads as a roll.
-	anim.speed_scale = ROLL_ANIMATION_SPEED
 	roll_tween = create_tween()
-	roll_tween.tween_property(anim, "scale", ROLL_SQUASH, ROLL_SECONDS / 2)
-	roll_tween.parallel().tween_property(anim, "position", anim_rest_position + ROLL_SQUASH_SHIFT, ROLL_SECONDS / 2)
-	roll_tween.tween_property(anim, "scale", Vector2.ONE, ROLL_SECONDS / 2)
-	roll_tween.parallel().tween_property(anim, "position", anim_rest_position, ROLL_SECONDS / 2)
+	roll_tween.tween_method(_pose_roll, 0.0, 1.0, ROLL_SECONDS)
+
+## Turns the sprite a full circle about its center, so it lands upright. Right
+## and down turn clockwise, left and up counter-clockwise.
+func _pose_roll(progress: float):
+	anim.rotation = TAU * (roll_direction.x + roll_direction.y) * progress
+	if roll_direction.y == 0:
+		return
+	var ball_scale := lerpf(1.0, ROLL_BALL_SCALE, sin(PI * progress))
+	anim.scale = Vector2.ONE * ball_scale
+	anim.position = anim_rest_position + Vector2(0, SPRITE_HALF_HEIGHT * (1.0 - ball_scale))
 
 func _end_roll():
 	is_rolling = false
 	roll_seconds_left = 0.0
 	if roll_tween:
 		roll_tween.kill()
-	anim.speed_scale = 1.0
+	anim.rotation = 0.0
 	anim.scale = Vector2.ONE
 	anim.position = anim_rest_position
 
