@@ -12,7 +12,6 @@ signal exploded
 
 @onready var bomb: AnimatedSprite2D = $Bomb
 @onready var explosion: AnimatedSprite2D = $Explosion
-@onready var blast_area: Polygon2D = $BlastArea
 
 # The fuse blinks the bomb red, faster as it burns down. The bomb is near black,
 # so the flash has to push past 1 to show.
@@ -22,15 +21,6 @@ const LAST_BLINK_SECONDS := 0.1
 const BLINK_SPEEDUP := 0.8
 # On the floor it draws under the player and enemies, like the plants.
 const LANDED_Z_INDEX := 4
-const BLAST_AREA_COLOR := Color(1, 0.3, 0.2, 0.18)
-
-
-func _ready() -> void:
-	var half := Vector2.ONE * blast_half_extent
-	blast_area.polygon = PackedVector2Array([-half, Vector2(half.x, -half.y), half, Vector2(-half.x, half.y)])
-	blast_area.color = BLAST_AREA_COLOR
-	# The root's scale is only for the sprites: the area is in world pixels.
-	blast_area.scale = Vector2.ONE / scale
 
 
 ## Call after adding the bomb to the tree.
@@ -76,7 +66,6 @@ func _explode() -> void:
 	Haptics.explosion()
 	bomb.hide()
 	$Marker.hide()
-	blast_area.hide()
 	explosion.show()
 	explosion.play()
 	# Spinners have no die(): blasts don't hurt them.

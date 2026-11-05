@@ -181,10 +181,6 @@ animations = [{
 scale = Vector2(1.4, 1.4)
 script = ExtResource("1_script")
 
-[node name="BlastArea" type="Polygon2D" parent="."]
-z_index = 1
-z_as_relative = false
-
 [node name="Marker" type="AnimatedSprite2D" parent="."]
 z_index = 1
 z_as_relative = false
