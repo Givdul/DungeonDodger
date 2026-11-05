@@ -10,7 +10,7 @@ Every PR that changes the game includes screenshots of the running game, one per
 
 ## Gameplay bot
 
-`tools/bot/` plays seeded runs headless, for balance testing. It's tooling, and the export presets leave it out.
+`tools/bot/` plays seeded runs headless, for balance testing. It's tooling, and the export presets leave it out. A fresh checkout needs `godot --headless --path . --import` first; without it the bot exits with an error.
 
 ```sh
 godot --headless --path . --fixed-fps 60 res://tools/bot/bot_runner.tscn -- --runs=30 --seed=1 --skill=casual

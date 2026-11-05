@@ -2,7 +2,9 @@ extends Node
 ## Plays seeded runs of the game with the autopilot. Prints one JSON line per
 ## run, then a summary line. "Gameplay bot" in AGENTS.md says how to run it.
 
-const GAME_SCENE := preload("res://scenes/game.tscn")
+# Loaded at run time: a preload that fails, as in an unimported checkout, stops this script
+# from parsing, and Godot then idles forever instead of exiting.
+const GAME_SCENE_PATH := "res://scenes/game.tscn"
 const Autopilot := preload("res://tools/bot/autopilot.gd")
 const RunRecorder := preload("res://tools/bot/run_recorder.gd")
 
@@ -15,12 +17,18 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
+	var game_scene := load(GAME_SCENE_PATH) as PackedScene
+	if game_scene == null:
+		push_error("Couldn't load %s. In a fresh checkout, run: godot --headless --path . --import" % GAME_SCENE_PATH)
+		get_tree().quit(1)
+		return
+
 	var started := Time.get_ticks_msec()
 	var results: Array[Dictionary] = []
 	for run in options.runs:
 		var run_seed: int = options.seed + run
 		var result := {"type": "run", "run": run, "seed": run_seed, "skill": options.skill}
-		result.merge(await _play(run_seed, options.skill, options["max-seconds"]))
+		result.merge(await _play(game_scene, run_seed, options.skill, options["max-seconds"]))
 		print(JSON.stringify(result))
 		results.append(result)
 	var summary := _summarize(results)
@@ -53,9 +61,9 @@ func _parse_options(args: PackedStringArray) -> Dictionary:
 
 
 # Starts the game the way PLAY does, and lets the autopilot play it until the run ends.
-func _play(run_seed: int, skill: String, max_seconds: float) -> Dictionary:
+func _play(game_scene: PackedScene, run_seed: int, skill: String, max_seconds: float) -> Dictionary:
 	seed(run_seed)
-	var game: Node2D = GAME_SCENE.instantiate()
+	var game: Node2D = game_scene.instantiate()
 	add_child(game)
 	var recorder := RunRecorder.new()
 	recorder.max_seconds = max_seconds
