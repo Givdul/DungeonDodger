@@ -1,5 +1,10 @@
 # Agent instructions
 
+## Running the game
+
+- Test without sound. Before `project_run`, check that `~/Library/Application Support/Godot/app_userdata/Dungeon Dodger/settings.cfg` has `muted=true` under `[audio]`. Every worktree shares that file, and the game reads it at startup. The mute button saves to it too, so if a test presses that button, leave it muted. Headless runs make no sound.
+- Call `project_manage` with `op: "stop"` before closing the editor or ending the task. A running game outlives its editor and keeps playing.
+
 ## Pull requests
 
 Every PR that changes the game includes screenshots of the running game, one per screen or state the PR adds or changes.
