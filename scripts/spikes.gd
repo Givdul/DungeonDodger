@@ -21,7 +21,8 @@ var _held: Array = []
 @onready var _solid: StaticBody2D = $Solid
 @onready var _solid_shape: CollisionShape2D = $Solid/CollisionShape2D
 # Sees the player and spinners. Its shape is smaller than the solid's, so a body stopped against the
-# raised spikes doesn't count as standing on them.
+# raised spikes doesn't count as standing on them. The solid leaves 4 px of the tile free on each side,
+# because a player hugging a side wall still reaches 3 px into the outermost column and must get past.
 @onready var _occupants: Area2D = $Occupants
 
 

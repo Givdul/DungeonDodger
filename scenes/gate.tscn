@@ -122,10 +122,10 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_solid"]
-size = Vector2(16, 16)
+size = Vector2(8, 16)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_occupants"]
-size = Vector2(14, 14)
+size = Vector2(6, 14)
 
 [node name="Gate" type="AnimatedSprite2D"]
 sprite_frames = SubResource("SpriteFrames_gate")
