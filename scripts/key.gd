@@ -15,6 +15,7 @@ func _physics_process(_delta: float) -> void:
 	player.has_key = true
 	picked_up.emit()
 	set_physics_process(false)
+	$PickupSound.play()
 	anim.play(&"collected")
 	await anim.animation_finished
 	queue_free()

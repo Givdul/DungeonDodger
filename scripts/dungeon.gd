@@ -14,6 +14,7 @@ signal coin_picked_up
 
 @export var coin_scene: PackedScene
 @export var spikes_scene: PackedScene
+@export var gate_scene: PackedScene
 @export var pit_scene: PackedScene
 @export var bomberplant_scene: PackedScene
 @export var chest_scene: PackedScene
@@ -53,10 +54,12 @@ const PATH_TURN_CHANCE := 0.25
 # Rows ahead of the player's start with no hazards, so a run opens gently.
 const ROWS_BEFORE_HAZARDS := 12
 
-# Hazard patterns, one string per row from the top, one character per floor column:
-# . plain floor, s spikes, c cracked floor, o hole. A pattern may be mirrored. Every
-# row leaves two adjacent plain columns, and the safe path steers through them. It
-# turns only where both its old and new columns are plain. The outermost columns stay plain.
+# Hazard patterns, one string per row from the top, one character per floor column: . plain floor,
+# o hole, c cracked floor, x failing floor, which collapses by itself low on the screen, s spikes on
+# their own phase, 1 2 3 spikes rising in that order, g h gates rising half a cycle apart. A pattern
+# may be mirrored. Every row leaves two adjacent plain columns, and the safe path steers through
+# them. It turns only where both its old and new columns are plain, so a pattern that moves the only
+# gap across the corridor needs plain rows to turn in. The outermost columns stay plain.
 const PLAIN := "."
 const PLAIN_ROW := "......"
 const HOLE: Array[String] = [
@@ -66,34 +69,146 @@ const HOLE: Array[String] = [
 const SPIKE_ROW: Array[String] = [
 	".sss..",
 ]
+const HOLE_DOTS: Array[String] = [
+	".o.o..",
+]
+const CRACK_STEPS: Array[String] = [
+	"...c..",
+	"..c...",
+	".c....",
+]
+const SPIKE_POSTS: Array[String] = [
+	".s..s.",
+]
 const SPIKE_CHECKER: Array[String] = [
 	".s.s..",
 	"..s...",
 	".s.s..",
+]
+const HOLE_STAGGER: Array[String] = [
+	"...o..",
+	"......",
+	".o....",
+	"......",
+	"...o..",
+]
+const SPIKE_WAVE: Array[String] = [
+	".123..",
 ]
 const CRACKED_FIELD: Array[String] = [
 	".ccc..",
 	".cc...",
 	".ccc..",
 ]
+const HOLE_BLOCK: Array[String] = [
+	".oo...",
+	".oo...",
+]
+const GATE_BARRIER: Array[String] = [
+	".ggg..",
+]
+const CRACK_RING: Array[String] = [
+	".ccc..",
+	".c.c..",
+	".ccc..",
+]
+const SPIKE_RIPPLE: Array[String] = [
+	".3.3..",
+	"..2...",
+	".1.1..",
+]
+const FAILING_STRIP: Array[String] = [
+	"..xx..",
+	"..xx..",
+	"..xx..",
+]
 const CRACKED_RIM_HOLE: Array[String] = [
 	".ccc..",
 	".coc..",
 	".ccc..",
 ]
-# Smallest first. The patterns on offer grow from the first FIRST_PATTERN_COUNT to all of
+const SPIKE_SLALOM: Array[String] = [
+	".sss..",
+	"......",
+	"......",
+	"......",
+	"......",
+	"..sss.",
+]
+const SPIKE_MARCH: Array[String] = [
+	".333..",
+	"......",
+	".222..",
+	"......",
+	".111..",
+]
+const GATE_ZIPPER: Array[String] = [
+	".g.h..",
+	".h.g..",
+]
+const HOLE_BRIDGE: Array[String] = [
+	".ooo..",
+	".ccc..",
+	".ooo..",
+]
+const FAILING_RUN: Array[String] = [
+	".xxx..",
+	".xxx..",
+	".xxx..",
+	".xxx..",
+]
+const GATE_SLALOM: Array[String] = [
+	"..ggg.",
+	"......",
+	"......",
+	"......",
+	"......",
+	".ggg..",
+]
+const SPIKE_SLAM: Array[String] = [
+	".111..",
+	".111..",
+	".111..",
+]
+const FAILING_RIM: Array[String] = [
+	".xxx..",
+	".xox..",
+	".xxx..",
+]
+const HOLE_SLALOM: Array[String] = [
+	".ooo..",
+	"......",
+	"......",
+	"......",
+	"......",
+	"..ooo.",
+]
+const GAUNTLET: Array[String] = [
+	".s.g..",
+	"......",
+	"..oo..",
+	"......",
+	".g.s..",
+]
+# Gentlest first. The patterns on offer grow from the first FIRST_PATTERN_COUNT to all of
 # them, and the plain rows before each one shrink from the longest gap to the shortest,
 # over the ROWS_TO_FULL_DEPTH rows after the opening. A random 0 to GAP_JITTER_ROWS is added.
-const PATTERNS: Array[Array] = [HOLE, SPIKE_ROW, SPIKE_CHECKER, CRACKED_FIELD, CRACKED_RIM_HOLE]
+const PATTERNS: Array[Array] = [
+	HOLE, SPIKE_ROW, HOLE_DOTS, CRACK_STEPS, SPIKE_POSTS, SPIKE_CHECKER, HOLE_STAGGER, SPIKE_WAVE, CRACKED_FIELD,
+	HOLE_BLOCK, GATE_BARRIER, CRACK_RING, SPIKE_RIPPLE, FAILING_STRIP, CRACKED_RIM_HOLE, SPIKE_SLALOM, SPIKE_MARCH,
+	GATE_ZIPPER, HOLE_BRIDGE, FAILING_RUN, GATE_SLALOM, SPIKE_SLAM, FAILING_RIM, HOLE_SLALOM, GAUNTLET,
+]
 const FIRST_PATTERN_COUNT := 2
 const ROWS_TO_FULL_DEPTH := 150
 const LONGEST_GAP_ROWS := 24
 const SHORTEST_GAP_ROWS := 10
 const GAP_JITTER_ROWS := 4
-# Bomberplants are solid, so like hazards they stay off the safe path. Only one
-# grows at a time, so the built rows, and the view, never hold two.
-const ROWS_BEFORE_PLANTS := 30
-const PLANT_CHANCE_PER_ROW := 0.025
+# Bomberplants are solid, so like hazards they stay off the safe path. The next one comes
+# a random time in this range after the last, in game seconds, so there's always a plant to
+# lead enemies to before long. Only one grows at a time, so the built rows, and the view,
+# never hold two.
+const PLANT_MIN_SECONDS := 15.0
+const PLANT_MAX_SECONDS := 25.0
 const ROWS_BEFORE_ITEMS := 20
 const CHEST_CHANCE_PER_ROW := 0.008
 const KEY_CHANCE_PER_ROW := 0.008
@@ -104,6 +219,9 @@ const HAZARD_EDGE_GRACE := 3.0
 # the trap grace, so the player can run along the rim with most of their body
 # over the dark. Neighbouring holes count as one, so there is no rim between them.
 const HOLE_EDGE_GRACE := 5.0
+# Seconds between the spikes of a wave rising, 1 first, and a g gate rising and an h gate rising.
+const SPIKE_WAVE_STEP_SECONDS := 0.3
+const GATE_PHASE_GAP_SECONDS := 2.4
 
 # Empty rows between one coin and the next, picked from these. The repeated 2
 # makes short gaps likelier, for about a third of a coin a row.
@@ -131,6 +249,9 @@ var _hazards: Dictionary[Vector2i, Node2D] = {}
 # Bomberplants and chests, which block the cell they stand on.
 var _solids: Dictionary[Vector2i, Node2D] = {}
 var _plant: Node2D
+var _plant_seconds_left := randf_range(PLANT_MIN_SECONDS, PLANT_MAX_SECONDS)
+# Game seconds of play, which traps set to rise in step start from, whichever row they are built on.
+var _trap_clock := 0.0
 # Where the latest coin went, so the next one picks another column and a key another cell.
 var _last_coin_cell := NO_CELL
 # Chests only spawn once a key has been picked up, so the first one is never unopenable.
@@ -148,7 +269,9 @@ func start(view: Rect2) -> void:
 	follow(view)
 
 
-func follow(view: Rect2) -> void:
+func follow(view: Rect2, delta := 0.0) -> void:
+	_plant_seconds_left -= delta
+	_trap_clock += delta
 	while _next_row >= _row_at(view.position.y) - ROWS_BUILT_ABOVE_VIEW:
 		_build_row(_next_row)
 		_next_row -= 1
@@ -254,8 +377,11 @@ func _build_row(row: int) -> void:
 	var rows_ahead := _start_row - row
 	# A line or a pattern keeps its whole row clear of solids, like the path does its columns.
 	var clear := range(FIRST_FLOOR_COLUMN, LAST_FLOOR_COLUMN + 1) if on_line or hazards != PLAIN_ROW else path
-	if rows_ahead >= ROWS_BEFORE_PLANTS and not is_instance_valid(_plant) and randf() < PLANT_CHANCE_PER_ROW:
+	if _plant_seconds_left <= 0 and not is_instance_valid(_plant):
 		_plant = _place_solid(bomberplant_scene, row, _solid_columns(row, clear))
+		# A row with no room leaves the plant due, so the next row tries again.
+		if _plant:
+			_plant_seconds_left = randf_range(PLANT_MIN_SECONDS, PLANT_MAX_SECONDS)
 	if _key_found and rows_ahead >= ROWS_BEFORE_ITEMS and randf() < CHEST_CHANCE_PER_ROW:
 		# Right beside the path, so the player can always reach it.
 		var beside_path := [path.front() - 1, path.back() + 1]
@@ -377,6 +503,12 @@ func _place_solid(scene: PackedScene, row: int, columns: Array) -> Node2D:
 	return solid
 
 
+## How far the floor at the point has collapsed, from 0 to 1. Anything but a pit counts as whole.
+func collapse_at(point: Vector2) -> float:
+	var hazard = _hazards.get(local_to_map(to_local(point)))
+	return hazard.collapse() if hazard is Pit else 0.0
+
+
 func _is_open_hole(cell: Vector2i) -> bool:
 	var hazard = _hazards.get(cell)
 	return hazard is Pit and hazard.is_open()
@@ -397,11 +529,21 @@ func _place_hazard(cell: Vector2i, symbol: String) -> void:
 	match symbol:
 		"s":
 			hazard = spikes_scene.instantiate()
+		"1", "2", "3":
+			hazard = spikes_scene.instantiate()
+			hazard.start_seconds = _trap_clock + (3 - symbol.to_int()) * SPIKE_WAVE_STEP_SECONDS
+		"g":
+			hazard = gate_scene.instantiate()
+			hazard.start_seconds = _trap_clock
+		"h":
+			hazard = gate_scene.instantiate()
+			hazard.start_seconds = _trap_clock + GATE_PHASE_GAP_SECONDS
 		"o":
 			hazard = pit_scene.instantiate()
-		"c":
+		"c", "x":
 			var cracked_floor: Pit = pit_scene.instantiate()
 			cracked_floor.crumbles = true
+			cracked_floor.failing = symbol == "x"
 			hazard = cracked_floor
 	hazard.position = map_to_local(cell)
 	add_child(hazard)

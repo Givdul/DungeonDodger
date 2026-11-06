@@ -8,8 +8,10 @@ extends Area2D
 @export var windup_time := 0.5
 # The corridor has no top or bottom wall, so a rush along it may never reach a wall.
 @export var max_rush_time := 1.5
-# Closest two bats' centers can get. Their bodies touch here; the wings still overlap.
+# Bats that aren't rushing drift apart until their centers are this far apart. Their bodies
+# touch here; the wings still overlap. A rush ignores other bats, so it's never cut short.
 @export var bat_spacing := 14.0
+@export var drift_speed := 30.0
 
 @onready var player = get_tree().get_first_node_in_group("Player")
 @onready var anim = $AnimatedSprite2D
@@ -69,8 +71,10 @@ func _physics_process(delta):
 	match state:
 		"entering":
 			_fly_in(delta)
+			_drift_off_bats(delta)
 		"locking":
 			_hold_still()
+			_drift_off_bats(delta)
 		"rushing":
 			_move_rush(delta)
 
@@ -172,21 +176,26 @@ func _move_rush(delta):
 	
 	rush_time_left -= delta
 	var hits_wall = game and not game.is_between_walls(new_pos.x)
-	if hits_wall or rush_time_left <= 0 or _bumps_bat(new_pos):
+	if hits_wall or rush_time_left <= 0:
 		state = "entering"
 		return
 
 	position = new_pos
 
-# Only moving closer counts, so bats that spawn on top of each other can still separate.
-func _bumps_bat(new_pos: Vector2) -> bool:
+# Not during a wind-up: the rush line is already marked. A rushing bat isn't drifted from,
+# so it passes through without shoving the bats it crosses.
+func _drift_off_bats(delta):
 	for bat in get_tree().get_nodes_in_group("Bats"):
-		if bat == self:
+		if bat == self or bat.state == "rushing" or bat.state == "dead":
 			continue
-		var new_gap := new_pos.distance_to(bat.position)
-		if new_gap < bat_spacing and new_gap < position.distance_to(bat.position):
-			return true
-	return false
+		var away: Vector2 = position - bat.position
+		if away.length() >= bat_spacing:
+			continue
+		# Bats on the exact same spot have no direction between them.
+		var direction := away.normalized() if away != Vector2.ZERO else Vector2.from_angle(randf() * TAU)
+		var new_pos: Vector2 = position + direction * drift_speed * delta
+		if not game or game.is_between_walls(new_pos.x):
+			position = new_pos
 
 
 func die():

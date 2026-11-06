@@ -1,4 +1,4 @@
-[gd_scene load_steps=68 format=3 uid="uid://casiunlo1o1k1"]
+[gd_scene load_steps=69 format=3 uid="uid://casiunlo1o1k1"]
 
 [ext_resource type="Texture2D" uid="uid://cpdntd7p8ewmg" path="res://assets/sprites/Char_Sprites/char_run_right_anim_strip_6.png" id="1_itbdx"]
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_wjxfv"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://bqwvrc7rs7p7h" path="res://assets/sprites/Char_Sprites/char_hit_up_anim_strip_3.png" id="6_vpc67"]
 [ext_resource type="Texture2D" uid="uid://nlth8vyye4x3" path="res://assets/sprites/Char_Sprites/char_falling_all_dir_anim_strip_6.png" id="14_fall"]
 [ext_resource type="AudioStream" uid="uid://bfcvkup7grtum" path="res://assets/sounds/hit-3.wav" id="12_aqy2v"]
+[ext_resource type="AudioStream" path="res://assets/sounds/heal.wav" id="14_heal"]
 [ext_resource type="AudioStream" uid="uid://bivk6tfbp7d6f" path="res://assets/sounds/lose-10.wav" id="13_dc4cf"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_lox3b"]
@@ -504,5 +505,10 @@ bus = &"SFX"
 
 [node name="death_sound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("13_dc4cf")
+volume_db = 8.0
+bus = &"SFX"
+
+[node name="heal_sound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("14_heal")
 volume_db = 8.0
 bus = &"SFX"

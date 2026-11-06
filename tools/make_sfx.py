@@ -119,6 +119,13 @@ def main() -> None:
         mix(tone([1400, 350], 0.3), tone([2100, 520], 0.3), noise(0.06, rng)),
         0.04,
     )
+    write("assets/sounds/heal.wav", notes([523, 659, 784], 0.08) + tone([1047, 1047], 0.36), 0.035)
+    # Shorter than the key's collected animation, because the key frees itself, and its sound, when that ends.
+    write(
+        "assets/sounds/key.wav",
+        mix(notes([1568, 2093], 0.05) + tone([2637, 2637], 0.17), tone([3951, 3951], 0.27)),
+        0.03,
+    )
 
 
 if __name__ == "__main__":

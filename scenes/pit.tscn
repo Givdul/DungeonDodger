@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/pit.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://d6485avbiv5p" path="res://assets/sprites/Tiles_(animated)/Dungeon/broken_tile_fallingdown_anim_strip_9.png" id="2_tex"]
+[ext_resource type="Texture2D" uid="uid://brp1bq0eaupex" path="res://assets/sprites/Dungeon_Tileset.png" id="3_tileset"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pit0"]
 atlas = ExtResource("2_tex")
@@ -38,6 +39,20 @@ region = Rect2(112, 0, 16, 16)
 [sub_resource type="AtlasTexture" id="AtlasTexture_pit8"]
 atlas = ExtResource("2_tex")
 region = Rect2(128, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wall"]
+atlas = ExtResource("3_tileset")
+region = Rect2(16, 16, 16, 6)
+
+[sub_resource type="Gradient" id="Gradient_shadow"]
+offsets = PackedFloat32Array(0.2, 1)
+colors = PackedColorArray(0.2, 0.2, 0.2, 0, 0.2, 0.2, 0.2, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shadow"]
+gradient = SubResource("Gradient_shadow")
+width = 16
+height = 6
+fill_to = Vector2(0, 1)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_pit"]
 animations = [{
@@ -78,3 +93,22 @@ animations = [{
 sprite_frames = SubResource("SpriteFrames_pit")
 animation = &"collapse"
 script = ExtResource("1_script")
+
+[node name="Hole" type="ColorRect" parent="."]
+show_behind_parent = true
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+mouse_filter = 2
+color = Color(0.2, 0.2, 0.2, 1)
+
+[node name="Wall" type="Sprite2D" parent="."]
+show_behind_parent = true
+position = Vector2(-8, -8)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Shadow" type="Sprite2D" parent="Wall"]
+texture = SubResource("GradientTexture2D_shadow")
+centered = false

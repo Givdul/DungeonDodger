@@ -9,7 +9,6 @@ extends Node2D
 @export var debug := false
 @onready var score_label = $Camera2D/Hud/ScoreLabel
 @onready var held_key: Sprite2D = $Camera2D/Hud/ItemBox/HeldKey
-@onready var roll_icon: Sprite2D = $Camera2D/Hud/RollBox/RollIcon
 @onready var high_score_var_label = $HighScoreVarLabel
 @onready var new_high_score_label: Label = $NewHighScoreLabel
 @onready var ui = $UI
@@ -48,7 +47,6 @@ const ENEMY_SPAWN_MARGIN := 12.0
 # A push the player can't follow by more than this means something solid is in
 # the way, and the scroll edge crushes them.
 const CRUSH_TOLERANCE := 1.0
-const ROLL_ICON_COOLING_ALPHA := 0.25
 
 
 func _ready():
@@ -67,7 +65,6 @@ func _ready():
 	player.died.connect(_on_player_died)
 	player.fell.connect(_on_player_fell)
 	player.key_changed.connect(held_key.set_visible)
-	player.roll_ready_changed.connect(_show_roll_ready)
 	ui.restart_requested.connect(_restart)
 	if _restarting:
 		_restarting = false
@@ -91,14 +88,11 @@ func _physics_process(delta):
 		if not run_started:
 			return
 	camera.position.y -= scroll_speed() * delta
-	dungeon.follow(screen_rect())
+	dungeon.follow(screen_rect(), delta)
 	# The scroll edge and hazards leave a falling player alone until they are back on the floor.
 	if player.is_falling:
 		return
 	_keep_player_in_view()
-	# A roll carries the player over holes and traps without setting them off. Raised spikes stop it.
-	if player.is_rolling:
-		return
 	var hazard = dungeon.hazard_at(player.position)
 	if hazard is Pit:
 		hazard.step_on(player)
@@ -144,10 +138,6 @@ func _keep_player_in_view() -> void:
 	player.position.y = maxf(player.position.y, band.position.y)
 
 
-func _show_roll_ready(is_ready: bool) -> void:
-	roll_icon.modulate.a = 1.0 if is_ready else ROLL_ICON_COOLING_ALPHA
-
-
 func _on_player_died():
 	var is_new_best := point_count > ScoreManager.high_score
 	if is_new_best:
@@ -191,6 +181,7 @@ func playable_area() -> Rect2:
 func _on_point_picked_up():
 	point_count += 1
 	score_label.text = str(point_count)
+	ui.speed_up_for_score(point_count)
 	# ScoreManager.high_score is the old best until the run ends.
 	if ScoreManager.high_score > 0 and point_count == ScoreManager.high_score + 1:
 		_lay_new_high_score_line()
