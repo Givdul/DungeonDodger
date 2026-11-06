@@ -10,7 +10,7 @@ Every PR that changes the game includes screenshots of the running game, one per
 
 ## Gameplay bot
 
-`tools/bot/` plays seeded runs headless, for balance testing. It's tooling, and the export presets leave it out. A fresh checkout needs `godot --headless --path . --import` first; without it the bot exits with an error.
+`tools/bot/` plays seeded runs headless, for balance testing. It's tooling, and the export presets leave it out. A fresh checkout needs `godot --headless --path . --import` first; without it the bot exits with an error. The first pass can stop after a couple of files, so run it again if `.godot/imported` looks nearly empty.
 
 ```sh
 godot --headless --path . --fixed-fps 60 res://tools/bot/bot_runner.tscn -- --runs=30 --seed=1 --skill=casual
@@ -18,7 +18,7 @@ godot --headless --path . --fixed-fps 60 res://tools/bot/bot_runner.tscn -- --ru
 
 - Options: `--runs` (30), `--seed` (1), `--skill` (`casual` or `good`), `--max-seconds` (600 real seconds, after which a run ends as `timeout`).
 - Run `n` seeds the global RNG with `seed + n`, so the same options give the same results, and `--runs=1 --seed=<seed>` replays one run. Keep `--fixed-fps 60`: without it the runs play in real time and stop being reproducible. 30 runs take about 1.5 minutes for `casual` and 6 for `good`. For more speed, run separate seed ranges in parallel processes.
-- The bot starts each run the way PLAY does and steers only by pressing `move_*` actions, as a swipe does. It reacts after a delay and looks a short way ahead for holes, traps, solids, enemies, bat rush markers, bomb markers and the scroll edges, and it goes for coins. It never dodge-rolls. The skills differ in reaction time, decision rate, lookahead and lapses (`SKILLS` in `autopilot.gd`). Those are in real time, since a person doesn't slow down with the game. Its predictions step in game time.
+- The bot starts each run the way PLAY does and steers only by pressing `move_*` actions, as a swipe does. It reacts after a delay and looks a short way ahead for holes, traps, solids, enemies, bat wind-ups, bomb markers and the scroll edges, and it goes for coins. The skills differ in reaction time, decision rate, lookahead and lapses (`SKILLS` in `autopilot.gd`). Those are in real time, since a person doesn't slow down with the game. Its predictions step in game time.
 - Output: every line that starts with `{` is JSON. There is one `"type": "run"` line per run, with `survival_seconds` (real seconds from the first move, not game seconds), `score`, `hits` (lives lost, falls included), `death_cause` (an enemy's scene name, `hole`, `crumbling_floor`, `spikes`, `bomb`, `crush` or `timeout`), `max_plants_in_view`, `max_enemies_in_view`, and the longest run of rows without coins and with them. A final `"type": "summary"` line gives median, p10 and p90 survival, the median score and hits, death causes in percent, and the maxima of the per-run counts.
 - Headless, the view is the project's 720x1280 with no safe-area insets. A tall phone shows about a tile row more, so counts in view and survival can differ a little from a device.
 - To watch it, run `res://tools/bot/bot_runner.tscn` from the editor. It plays in real time with the defaults.

@@ -5,9 +5,13 @@ extends AnimatedSprite2D
 ## The rest and the warning are long frames in the SpriteFrames, so a cycle is not evenly split by frame.
 
 # Frames of the strip where the spikes are out.
-const FIRST_UP_FRAME := 7
-const LAST_UP_FRAME := 10
+@export var first_up_frame := 7
+@export var last_up_frame := 10
+@export var hurts := true
 
+# Seconds into the cycle to start at, so traps can rise in step. Set before adding to the tree.
+# Negative for a random start, which keeps a row of traps from rising in lockstep.
+var start_seconds := -1.0
 var _was_up := false
 # Bodies that overlapped the cell as the spikes rose. They pass through until they have left it, since
 # Godot would otherwise push them out of the solid, however far that takes them. Untyped, because
@@ -17,14 +21,15 @@ var _held: Array = []
 @onready var _solid: StaticBody2D = $Solid
 @onready var _solid_shape: CollisionShape2D = $Solid/CollisionShape2D
 # Sees the player and spinners. Its shape is smaller than the solid's, so a body stopped against the
-# raised spikes doesn't count as standing on them.
+# raised spikes doesn't count as standing on them. The solid leaves 4 px of the tile free on each side,
+# because a player hugging a side wall still reaches 3 px into the outermost column and must get past.
 @onready var _occupants: Area2D = $Occupants
 
 
 func _ready() -> void:
-	# A random phase keeps a row of traps from rising in lockstep. It is random over time, not over
-	# frames, so the long rest gets its share of the starts.
-	var start := _frame_at(randf() * _cycle_seconds())
+	# The random phase is random over time, not over frames, so the long rest gets its share of the starts.
+	var seconds := fposmod(start_seconds, _cycle_seconds()) if start_seconds >= 0 else randf() * _cycle_seconds()
+	var start := _frame_at(seconds)
 	set_frame_and_progress(int(start.x), start.y)
 	play()
 
@@ -45,7 +50,7 @@ func _rise() -> void:
 	for body: CharacterBody2D in _occupants.get_overlapping_bodies():
 		body.add_collision_exception_with(_solid)
 		_held.append(body)
-		if body.is_in_group(&"Player") and get_parent().hazard_at(body.global_position) == self:
+		if hurts and body.is_in_group(&"Player") and get_parent().hazard_at(body.global_position) == self:
 			body.take_damage()
 
 
@@ -74,7 +79,7 @@ func is_up_in(seconds: float) -> bool:
 
 
 func _is_up_frame(index: int) -> bool:
-	return index >= FIRST_UP_FRAME and index <= LAST_UP_FRAME
+	return index >= first_up_frame and index <= last_up_frame
 
 
 func _frame_seconds(index: int) -> float:

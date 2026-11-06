@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_4l5gb"]
 [ext_resource type="Script" path="res://scripts/dungeon.gd" id="2_dngn"]
 [ext_resource type="PackedScene" path="res://scenes/spikes.tscn" id="3_spikes"]
+[ext_resource type="PackedScene" path="res://scenes/gate.tscn" id="3_gate"]
 [ext_resource type="PackedScene" path="res://scenes/pit.tscn" id="3_pit"]
 [ext_resource type="PackedScene" path="res://scenes/bomberplant.tscn" id="3_plant"]
 [ext_resource type="PackedScene" path="res://scenes/spinner.tscn" id="3_spinner"]
@@ -10,7 +11,6 @@
 [ext_resource type="PackedScene" path="res://scenes/key.tscn" id="3_key"]
 [ext_resource type="Texture2D" path="res://assets/sprites/Hud_Ui/item_box_hud.png" id="3_itembox"]
 [ext_resource type="Texture2D" path="res://assets/sprites/Props_Items_(animated)/key_item_anim_strip_6.png" id="3_keytex"]
-[ext_resource type="Texture2D" path="res://assets/sprites/Char_Sprites/char_run_right_anim_strip_6.png" id="3_rolltex"]
 [ext_resource type="PackedScene" uid="uid://casiunlo1o1k1" path="res://scenes/player.tscn" id="1_hyu2l"]
 [ext_resource type="Texture2D" uid="uid://brp1bq0eaupex" path="res://assets/sprites/Dungeon_Tileset.png" id="2_s7dxe"]
 [ext_resource type="PackedScene" uid="uid://qkophn3d8224" path="res://scenes/point.tscn" id="3_ye4wu"]
@@ -241,6 +241,7 @@ tile_set = SubResource("TileSet_0ido1")
 script = ExtResource("2_dngn")
 coin_scene = ExtResource("3_ye4wu")
 spikes_scene = ExtResource("3_spikes")
+gate_scene = ExtResource("3_gate")
 pit_scene = ExtResource("3_pit")
 bomberplant_scene = ExtResource("3_plant")
 chest_scene = ExtResource("3_chest")
@@ -277,9 +278,9 @@ z_index = 10
 z_as_relative = false
 
 [node name="ScoreLabel" type="Label" parent="Camera2D/Hud"]
-offset_left = 12.0
+offset_left = -3.0
 offset_top = 7.0
-offset_right = 52.0
+offset_right = 37.0
 offset_bottom = 25.0
 theme_override_fonts/font = ExtResource("7_jjp24")
 theme_override_font_sizes/font_size = 8
@@ -288,11 +289,11 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="HealthContainer" parent="Camera2D/Hud" instance=ExtResource("8_vqtvi")]
-position = Vector2(-38, 15)
+position = Vector2(-53, 15)
 full_icon = ExtResource("9_nd486")
 
 [node name="ItemBox" type="Sprite2D" parent="Camera2D/Hud"]
-position = Vector2(6, 15)
+position = Vector2(-9, 15)
 texture = ExtResource("3_itembox")
 
 [node name="HeldKey" type="Sprite2D" parent="Camera2D/Hud/ItemBox"]
@@ -300,17 +301,6 @@ visible = false
 position = Vector2(0, -1)
 scale = Vector2(0.75, 0.75)
 texture = ExtResource("3_keytex")
-region_enabled = true
-region_rect = Rect2(0, 0, 16, 16)
-
-[node name="RollBox" type="Sprite2D" parent="Camera2D/Hud"]
-position = Vector2(-53, 15)
-texture = ExtResource("3_itembox")
-
-[node name="RollIcon" type="Sprite2D" parent="Camera2D/Hud/RollBox"]
-position = Vector2(0, -1)
-scale = Vector2(0.75, 0.75)
-texture = ExtResource("3_rolltex")
 region_enabled = true
 region_rect = Rect2(0, 0, 16, 16)
 
@@ -330,7 +320,7 @@ position = Vector2(-59, 0)
 z_index = 98
 shape = SubResource("WorldBoundaryShape2D_euq26")
 
-[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+[node name="Music" type="AudioStreamPlayer" parent="."]
 process_mode = 3
 stream = ExtResource("10_x555p")
 autoplay = true

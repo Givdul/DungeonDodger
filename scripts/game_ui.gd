@@ -30,11 +30,15 @@ const UI_SCALE := 4.0
 const COUNTDOWN_FROM := 3
 const COUNTDOWN_STEP := 0.5
 
-# How fast the game runs while playing. Engine.time_scale is global and survives
-# reload_current_scene(), so _set_state sets it on every state change.
-const PLAYING_TIME_SCALE := 0.7
+# How fast the game runs while playing, rising with the score from the start to the max.
+# Engine.time_scale is global and survives reload_current_scene(), so _set_state sets it
+# on every state change.
+const START_TIME_SCALE := 0.77
+const MAX_TIME_SCALE := 0.924
+const POINTS_TO_MAX_TIME_SCALE := 50.0
 
 var state := State.START
+var _playing_time_scale := START_TIME_SCALE
 var _countdown: Tween
 # Game overs step through the hints from a random one, so two in a row never repeat.
 # Static so it survives reload_current_scene() on restart.
@@ -110,6 +114,12 @@ func _start_countdown() -> void:
 	_countdown.tween_callback(start_playing)
 
 
+func speed_up_for_score(score: int) -> void:
+	_playing_time_scale = lerpf(START_TIME_SCALE, MAX_TIME_SCALE, minf(score / POINTS_TO_MAX_TIME_SCALE, 1.0))
+	if state == State.PLAYING:
+		Engine.time_scale = _playing_time_scale
+
+
 func show_game_over(score: int, high_score: int, is_new_best: bool) -> void:
 	%FinalScoreLabel.text = "SCORE %d" % score
 	%GameOverBestLabel.text = "BEST %d" % high_score
@@ -125,7 +135,7 @@ func _set_state(new_state: State) -> void:
 	state = new_state
 	var playing := state == State.PLAYING
 	get_tree().paused = not playing
-	Engine.time_scale = PLAYING_TIME_SCALE if playing else 1.0
+	Engine.time_scale = _playing_time_scale if playing else 1.0
 	pause_button.visible = playing
 	mute_button.visible = not playing and state != State.CREDITS and state != State.RESUMING
 	dim.visible = not playing

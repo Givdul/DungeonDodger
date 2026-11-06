@@ -5,12 +5,11 @@ signal died
 # Emitted when a fall that cost a life has played, so the game can put the player back on the floor.
 signal fell
 signal key_changed(has_key: bool)
-signal roll_ready_changed(is_ready: bool)
 
 @onready var anim = $AnimatedSprite2D
 @onready var audio_stream_player_2d = $hit_sound
 @onready var death_sound = $death_sound
-@onready var anim_rest_position: Vector2 = anim.position
+@onready var heal_sound = $heal_sound
 
 
 @export var max_lives := 3
@@ -27,37 +26,17 @@ const BLINK_FADED_ALPHA := 0.2
 const FALL_SLIDE_SECONDS := 0.12
 # The fall strip shrinks toward the bottom of its frame, this far above the feet.
 const FALL_SPRITE_RISE := 2.0
-const ROLL_SECONDS := 0.25
-# A roll ends this far ahead of where running would have taken the player. Tuned with SPEED so a roll covers about 4 tiles.
-const ROLL_EXTRA_DISTANCE := 41.0
-const ROLL_SPEED := SPEED + ROLL_EXTRA_DISTANCE / ROLL_SECONDS
-const ROLL_COOLDOWN_SECONDS := 1.5
-# Rolling up or down also curls into a ball this size, halfway through the roll.
-const ROLL_BALL_SCALE := 0.75
-# The sprite frame is 16 px tall and scales about its center, so the center drops by this much of the shrink to keep the feet on the floor.
-const SPRITE_HALF_HEIGHT := 8.0
-const RUN_ANIMATIONS := {Vector2.UP: &"run_up", Vector2.DOWN: &"run_down", Vector2.LEFT: &"run_left", Vector2.RIGHT: &"run_right"}
 var is_dead := false
 var is_falling := false
 var is_hit := false  # Flag to know if hit anim is playing
 var is_invulnerable := false
 var invulnerability_tween: Tween
-# Rolling is its own short immunity, apart from the blink after a hit.
-var is_rolling := false
-var roll_direction := Vector2.ZERO
-var roll_seconds_left := 0.0
-var roll_cooldown_left := 0.0
-var roll_tween: Tween
 var has_key := false:
 	set(value):
 		has_key = value
 		key_changed.emit(value)
 
 func _physics_process(delta):
-	if roll_cooldown_left > 0:
-		roll_cooldown_left -= delta
-		if roll_cooldown_left <= 0:
-			roll_ready_changed.emit(true)
 	if is_dead or is_falling:
 		# Dead or falling, keep that animation, no movement
 		return
@@ -66,39 +45,25 @@ func _physics_process(delta):
 	if Input.is_action_just_pressed("move_up"):
 		direction = Vector2.UP
 		last_direction = Vector2.UP
-		if not (is_hit or is_rolling):
+		if not is_hit:
 			anim.play("run_up")
 	elif Input.is_action_just_pressed("move_down"):
 		direction = Vector2.DOWN
 		last_direction = Vector2.DOWN
-		if not (is_hit or is_rolling):
+		if not is_hit:
 			anim.play("run_down")
 	elif Input.is_action_just_pressed("move_left"):
 		direction = Vector2.LEFT
 		last_direction = Vector2.LEFT
-		if not (is_hit or is_rolling):
+		if not is_hit:
 			anim.play("run_left")
 	elif Input.is_action_just_pressed("move_right"):
 		direction = Vector2.RIGHT
 		last_direction = Vector2.RIGHT
-		if not (is_hit or is_rolling):
+		if not is_hit:
 			anim.play("run_right")
 
-	# MobileInputs presses dodge with the move that asked for it, so the roll goes the new way.
-	if Input.is_action_just_pressed(&"dodge"):
-		roll()
-
-	# Move player
-	if is_rolling:
-		velocity = roll_direction * ROLL_SPEED
-		roll_seconds_left -= delta
-		if roll_seconds_left <= 0:
-			_end_roll()
-			# A turn during the roll waited for it to end.
-			if not is_hit:
-				anim.play(RUN_ANIMATIONS[direction])
-	else:
-		velocity = direction * SPEED
+	velocity = direction * SPEED
 	move_and_slide()
 
 func _ready():
@@ -111,10 +76,11 @@ func heal() -> bool:
 		return false
 	current_lives += 1
 	lives_changed.emit(current_lives)
+	heal_sound.play()
 	return true
 
 func take_damage():
-	if current_lives <= 0 or is_invulnerable or is_rolling or is_dead or is_falling:
+	if current_lives <= 0 or is_invulnerable or is_dead or is_falling:
 		return
 	
 	current_lives -= 1
@@ -182,43 +148,6 @@ func _stop_invulnerability():
 		invulnerability_tween.kill()
 	anim.modulate.a = 1.0
 
-func can_roll() -> bool:
-	return roll_cooldown_left <= 0 and direction != Vector2.ZERO \
-		and not (is_rolling or is_dead or is_falling)
-
-## Dashes the player along their direction for ROLL_SECONDS, immune to harm.
-## The game lets a rolling player pass over holes and traps. During the
-## cooldown, or before the first move, it does nothing.
-func roll():
-	if not can_roll():
-		return
-	is_rolling = true
-	roll_direction = direction
-	roll_seconds_left = ROLL_SECONDS
-	roll_cooldown_left = ROLL_COOLDOWN_SECONDS
-	roll_ready_changed.emit(false)
-	roll_tween = create_tween()
-	roll_tween.tween_method(_pose_roll, 0.0, 1.0, ROLL_SECONDS)
-
-## Turns the sprite a full circle about its center, so it lands upright. Right
-## and down turn clockwise, left and up counter-clockwise.
-func _pose_roll(progress: float):
-	anim.rotation = TAU * (roll_direction.x + roll_direction.y) * progress
-	if roll_direction.y == 0:
-		return
-	var ball_scale := lerpf(1.0, ROLL_BALL_SCALE, sin(PI * progress))
-	anim.scale = Vector2.ONE * ball_scale
-	anim.position = anim_rest_position + Vector2(0, SPRITE_HALF_HEIGHT * (1.0 - ball_scale))
-
-func _end_roll():
-	is_rolling = false
-	roll_seconds_left = 0.0
-	if roll_tween:
-		roll_tween.kill()
-	anim.rotation = 0.0
-	anim.scale = Vector2.ONE
-	anim.position = anim_rest_position
-
 ## Pulls the player into the hole and plays the fall. It costs a life, and on
 ## the last one it ends the run. Otherwise the player stops and fell is emitted.
 func fall_into(hole_center: Vector2):
@@ -233,7 +162,6 @@ func fall_into(hole_center: Vector2):
 	lives_changed.emit(current_lives)
 	is_falling = true
 	direction = Vector2.ZERO
-	_end_roll()
 	_stop_invulnerability()
 	anim.play(&"fall")
 	audio_stream_player_2d.play()
@@ -247,7 +175,6 @@ func die(animation := &"death"):
 	if is_dead:
 		return
 	is_dead = true
-	_end_roll()
 	_stop_invulnerability()
 	anim.play(animation)
 	death_sound.play()
