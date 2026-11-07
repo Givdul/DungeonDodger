@@ -20,12 +20,12 @@ extends Area2D
 # Reference your game node to get the playable area
 @onready var game = get_tree().get_first_node_in_group("Game")  # Add group "Game" to your main game Node2D
 
-# A bat out of view, or too near the bottom edge to stay in view until its rush, is "entering":
-# it flies at the player, and only locks, winds up and rushes once it's in view. A locked bat
-# hovers along with the view, so the scroll doesn't carry it off the bottom before its next beat.
-var state = "entering"
-# Seconds until the next beat, when a bat in view winds up. It runs through every state, so
-# a rush that ends early just waits longer, and a bat out of view at a beat skips that beat.
+# A bat holds still in the world where its last rush ended, winds up on its beat, and rushes.
+# The scroll may carry it off the bottom, and a rush brings it back: keep a rush's distance per
+# charge_interval well over max_scroll_speed in game.gd, or a bat left behind never catches up.
+var state = "locking"
+# Seconds until the next beat, when the bat winds up. It runs through every state, so a rush
+# that ends early just waits longer.
 var beat_left := 0.0
 var rush_direction = Vector2.ZERO
 var rush_time_left := 0.0
@@ -66,15 +66,11 @@ func _physics_process(delta):
 		player.take_damage()
 
 	match state:
-		"entering":
-			_fly_in(delta)
-			_drift_off_bats(delta)
 		"locking":
-			_hover(delta)
+			_face_player()
 			_drift_off_bats(delta)
 		"rushing":
 			_move_rush(delta)
-	# After moving: the view moves after bats do, so only now is a bat hovering at the band's edge inside it.
 	_tick_beat(delta)
 
 func _tick_beat(delta):
@@ -82,36 +78,7 @@ func _tick_beat(delta):
 	if beat_left > 0:
 		return
 	beat_left += charge_interval
-	if _can_wind_up():
-		_start_windup()
-
-func _can_wind_up() -> bool:
-	return (state == "entering" or state == "locking") and _in_view_for_windup()
-
-# A bat holds still in the world during its wind-up, to stay on its locked-in line, and the view scrolls past
-# it. So it only winds up in the part of the floor band that is still in view when the wind-up ends.
-func _windup_band() -> Rect2:
-	return game.floor_band(windup_time)
-
-func _in_view_for_windup() -> bool:
-	return _windup_band().has_point(global_position)
-
-func _hover(delta):
-	global_position.y -= game.scroll_speed() * delta
-	_face_player()
-	if not _in_view_for_windup():
-		state = "entering"
-
-func _fly_in(delta):
-	var band := _windup_band()
-	if band.has_point(global_position):
-		state = "locking"
-		return
-	_face_player()
-	# The player may stand below the locking band, where the bat would never lock.
-	var inner := band.grow(-1.0)
-	var target: Vector2 = player.global_position.clamp(inner.position, inner.end)
-	global_position += global_position.direction_to(target) * speed * delta
+	_start_windup()
 
 func _face_player():
 	if player.global_position.x >= global_position.x:
@@ -149,7 +116,7 @@ func _move_rush(delta):
 	rush_time_left -= delta
 	var hits_wall = game and not game.is_between_walls(new_pos.x)
 	if hits_wall or rush_time_left <= 0:
-		state = "entering"
+		state = "locking"
 		return
 
 	position = new_pos
