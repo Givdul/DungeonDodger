@@ -102,6 +102,7 @@ size = Vector2(8, 16)
 size = Vector2(6, 14)
 
 [node name="Spikes" type="AnimatedSprite2D"]
+z_index = 1
 sprite_frames = SubResource("SpriteFrames_spikes")
 animation = &"default"
 script = ExtResource("1_script")

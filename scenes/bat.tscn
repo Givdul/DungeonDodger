@@ -272,6 +272,8 @@ animations = [{
 radius = 4.0
 
 [node name="bat" type="Area2D" groups=["Enemies"]]
+z_index = 6
+z_as_relative = false
 scale = Vector2(1.4, 1.4)
 collision_layer = 2
 collision_mask = 2

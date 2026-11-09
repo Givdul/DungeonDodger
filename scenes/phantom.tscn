@@ -300,6 +300,9 @@ animations = [{
 }]
 
 [node name="Phantom" type="CharacterBody2D" groups=["Phantoms", "Enemies"]]
+y_sort_enabled = true
+z_index = 5
+z_as_relative = false
 scale = Vector2(1.4, 1.4)
 collision_layer = 8
 collision_mask = 12
@@ -311,6 +314,8 @@ position = Vector2(0, -1)
 shape = SubResource("CircleShape2D_p63es")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 8)
+offset = Vector2(0, -8)
 sprite_frames = SubResource("SpriteFrames_jsnyy")
 animation = &"idle_right"
 autoplay = "idle_left"

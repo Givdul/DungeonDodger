@@ -162,6 +162,9 @@ animations = [{
 radius = 5.0
 
 [node name="Spinner" type="CharacterBody2D" groups=["Enemies"]]
+y_sort_enabled = true
+z_index = 5
+z_as_relative = false
 scale = Vector2(1.4, 1.4)
 collision_layer = 16
 collision_mask = 1
@@ -172,6 +175,8 @@ script = ExtResource("1_script")
 shape = SubResource("CircleShape2D_body")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 8)
+offset = Vector2(0, -8)
 sprite_frames = SubResource("SpriteFrames_spinner")
 animation = &"idle"
 autoplay = "idle"

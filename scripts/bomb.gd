@@ -19,14 +19,16 @@ const FUSE_FLASH := Color(4, 1, 1)
 const FIRST_BLINK_SECONDS := 0.5
 const LAST_BLINK_SECONDS := 0.1
 const BLINK_SPEEDUP := 0.8
-# On the floor it draws under the player and enemies, like the plants.
-const LANDED_Z_INDEX := 4
+# On the floor it stands and sorts with the player, the enemies and the plants.
+const LANDED_Z_INDEX := 5
+# Where the bomb sprite rests: its base, which it sorts by.
+const REST_POSITION := Vector2(0, 4)
 
 
 ## Call after adding the bomb to the tree.
 func launch(from: Vector2, target: Vector2) -> void:
 	global_position = target
-	var start := to_local(from)
+	var start := to_local(from) + REST_POSITION
 	bomb.play(&"up")
 	var tween := create_tween()
 	tween.tween_method(_fly.bind(start), 0.0, 1.0, flight_time)
@@ -55,7 +57,7 @@ func _tween_fuse(tween: Tween) -> void:
 
 func _fly(progress: float, start: Vector2) -> void:
 	var height := arc_height * 4 * progress * (1 - progress)
-	bomb.position = start.lerp(Vector2.ZERO, progress) + Vector2(0, -height)
+	bomb.position = start.lerp(REST_POSITION, progress) + Vector2(0, -height)
 	if progress > 0.5:
 		bomb.play(&"down")
 

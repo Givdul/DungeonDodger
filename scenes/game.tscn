@@ -188,6 +188,7 @@ texture = ExtResource("2_s7dxe")
 sources/0 = SubResource("TileSetAtlasSource_aw7m0")
 
 [node name="Game" type="Node2D" groups=["Game"]]
+y_sort_enabled = true
 script = ExtResource("1_4l5gb")
 phantom_scene = ExtResource("5_0ij6h")
 bat_scene = ExtResource("6_7trwo")
@@ -237,6 +238,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Dungeon" type="TileMapLayer" parent="."]
+y_sort_enabled = true
 tile_set = SubResource("TileSet_0ido1")
 script = ExtResource("2_dngn")
 coin_scene = ExtResource("3_ye4wu")
