@@ -1,4 +1,10 @@
 extends Node2D
+## Draw order: the floor tiles alone on z 0, then what lies on the floor (holes, traps, coins, keys, markers),
+## then the text on the floor. Everything that stands (the player, walking enemies, plants, chests, landed
+## bombs, raised gate bars) shares z 5, where the game and the dungeon y-sort it, so whatever stands lower on
+## the screen draws in front. Each of those has y-sort on too and its sprite on its lowest opaque row, so it
+## sorts by where it touches the floor, not by its origin. Bats fly over it on z 6, and what is in the air (thrown bombs, blasts, hopping
+## potions) on z 7.
 
 @export var phantom_scene: PackedScene
 @export var bat_scene: PackedScene
@@ -223,11 +229,19 @@ func _lay_new_high_score_line() -> void:
 
 
 # Just past the top or bottom edge of the screen, whichever is further from the player,
-# between the walls and on free floor where the dungeon has built the row.
-func _enemy_spawn_point() -> Vector2:
+# between the walls and on free floor where the dungeon has built the row. A spinner starts flush
+# against a wall instead, in the lane along it that no hazard reaches, so its first run doesn't take
+# it into a hole and the lanes aren't safe from it.
+func _enemy_spawn_point(enemy: Node2D) -> Vector2:
 	var screen := screen_rect()
 	var from_top: bool = player.global_position.y > screen.get_center().y
 	var y := screen.position.y - ENEMY_SPAWN_MARGIN if from_top else screen.end.y + ENEMY_SPAWN_MARGIN
+	if enemy.scene_file_path == spinner_scene.resource_path:
+		# A pixel short of touching the wall, so a run along it doesn't scrape the wall and stop as a crash.
+		var radius: float = enemy.get_node(^"CollisionShape2D").shape.radius * enemy.scale.x + 1.0
+		var left: float = $Bounds/LeftWorldBound.position.x + radius
+		var right: float = $Bounds/RightWorldBound.position.x - radius
+		return Vector2([left, right].pick_random(), y)
 	var spots: Array = dungeon.free_spots_on_row_at(y)
 	if spots.is_empty():
 		var area := playable_area()
@@ -237,9 +251,5 @@ func _enemy_spawn_point() -> Vector2:
 
 func spawn_enemy(enemy_scene: PackedScene):
 	var enemy = enemy_scene.instantiate()
-# Add enemy as the first child so it's drawn below existing enemies:
 	add_child(enemy)
-	move_child(enemy, 0)  # Move to the bottom of draw order (drawn first = behind)
-	enemy.global_position = _enemy_spawn_point()
-	enemy.z_as_relative = false # same z-index for all
-	enemy.z_index = 6
+	enemy.global_position = _enemy_spawn_point(enemy)

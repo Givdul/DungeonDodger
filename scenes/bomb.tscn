@@ -178,6 +178,7 @@ animations = [{
 }]
 
 [node name="Bomb" type="Node2D"]
+y_sort_enabled = true
 scale = Vector2(1.4, 1.4)
 script = ExtResource("1_script")
 
@@ -190,9 +191,10 @@ autoplay = "default"
 [node name="Bomb" type="AnimatedSprite2D" parent="."]
 z_index = 7
 z_as_relative = false
+position = Vector2(0, 4)
 sprite_frames = SubResource("SpriteFrames_bomb")
 animation = &"up"
-offset = Vector2(0, -1)
+offset = Vector2(0, -5)
 
 [node name="Explosion" type="AnimatedSprite2D" parent="."]
 visible = false

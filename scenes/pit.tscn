@@ -90,6 +90,7 @@ animations = [{
 }]
 
 [node name="Pit" type="AnimatedSprite2D"]
+z_index = 1
 sprite_frames = SubResource("SpriteFrames_pit")
 animation = &"collapse"
 script = ExtResource("1_script")
