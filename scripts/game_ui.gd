@@ -2,13 +2,14 @@ extends CanvasLayer
 
 signal restart_requested
 
-enum State { START, CREDITS, PLAYING, PAUSED, RESUMING, GAME_OVER }
+enum State { START, CREDITS, HEROES, PLAYING, PAUSED, RESUMING, GAME_OVER }
 
 const ASSET_CREDITS := """ART
 TOP-DOWN Adventure Pack by o_lobster
 o-lobster.itch.io
 License: CC BY 4.0
 creativecommons.org/licenses/by/4.0
+The hero skins are modified from o_lobster's pack
 
 MUSIC
 "Track 12" and "July 27th" by Abstraction
@@ -54,6 +55,7 @@ static var _hint_index := randi() % HINTS.size()
 @onready var game_over_screen: Control = %GameOverScreen
 @onready var credits_screen: Control = %CreditsScreen
 @onready var credits_text: Label = %CreditsText
+@onready var heroes_screen: Control = %HeroesScreen
 @onready var countdown_label: Label = %CountdownLabel
 @onready var hint_label: Label = %HintLabel
 
@@ -66,6 +68,8 @@ func _ready() -> void:
 	%RestartButton.pressed.connect(restart_requested.emit)
 	%CreditsButton.pressed.connect(_set_state.bind(State.CREDITS))
 	%BackButton.pressed.connect(_set_state.bind(State.START))
+	%HeroesButton.pressed.connect(_set_state.bind(State.HEROES))
+	heroes_screen.back_pressed.connect(_set_state.bind(State.START))
 	pause_button.pressed.connect(_set_state.bind(State.PAUSED))
 	mute_button.pressed.connect(Settings.toggle_mute)
 	Settings.muted_changed.connect(_show_muted)
@@ -120,10 +124,13 @@ func speed_up_for_score(score: int) -> void:
 		Engine.time_scale = _playing_time_scale
 
 
-func show_game_over(score: int, high_score: int, is_new_best: bool) -> void:
+func show_game_over(score: int, high_score: int, is_new_best: bool, new_heroes: Array[String]) -> void:
 	%FinalScoreLabel.text = "SCORE %d" % score
 	%GameOverBestLabel.text = "BEST %d" % high_score
 	%NewBestLabel.visible = is_new_best
+	%NewHeroesLabel.visible = not new_heroes.is_empty()
+	%NewHeroesLabel.text = "\n".join(new_heroes.map(func(id: String) -> String:
+		return "NEW HERO: " + Heroes.display_name(id).to_upper()))
 	_hint_index = (_hint_index + 1) % HINTS.size()
 	hint_label.text = "Hint: " + HINTS[_hint_index]
 	_set_state(State.GAME_OVER)
@@ -137,7 +144,7 @@ func _set_state(new_state: State) -> void:
 	get_tree().paused = not playing
 	Engine.time_scale = _playing_time_scale if playing else 1.0
 	pause_button.visible = playing
-	mute_button.visible = not playing and state != State.CREDITS and state != State.RESUMING
+	mute_button.visible = state == State.START or state == State.PAUSED or state == State.GAME_OVER
 	dim.visible = not playing
 	start_screen.visible = state == State.START
 	pause_screen.visible = state == State.PAUSED
@@ -145,6 +152,11 @@ func _set_state(new_state: State) -> void:
 	game_over_screen.visible = state == State.GAME_OVER
 	hint_label.visible = state == State.GAME_OVER
 	credits_screen.visible = state == State.CREDITS
+	heroes_screen.visible = state == State.HEROES
+	# Opaque, so the hearts and score don't show through the top bar.
+	%HeroesBackdrop.visible = state == State.HEROES
+	if state == State.HEROES:
+		heroes_screen.open()
 	# Built on first open: the engine notices are ~80 KB of text to shape.
 	if state == State.CREDITS and credits_text.text.is_empty():
 		credits_text.text = _credits_text()
