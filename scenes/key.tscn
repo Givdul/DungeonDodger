@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/key.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/sprites/Props_Items_(animated)/key_item_anim_strip_6.png" id="t0_default"]
-[ext_resource type="Texture2D" path="res://assets/sprites/Props_Items_(animated)/key_item_collected_anim_strip_6.png" id="t1_collected"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sanctum/key.png" id="t0_default"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sanctum/key_taken.png" id="t1_collected"]
 [ext_resource type="AudioStream" path="res://assets/sounds/key.wav" id="3_sound"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_default0"]

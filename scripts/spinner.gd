@@ -57,7 +57,12 @@ func _start_run() -> void:
 	else:
 		_run_direction = Vector2(0, signf(to_player.y))
 	_run_time_left = max_run_time
-	anim.play(&"run")
+	# The fireball's run rolls right; along the corridor it has a drawing for each way.
+	anim.flip_h = _run_direction.x < 0
+	if _run_direction.y != 0:
+		anim.play(&"run_down" if _run_direction.y > 0 else &"run_up")
+	else:
+		anim.play(&"run")
 
 
 # The spinner has no fall animation, so it slides into the hole and shrinks into the dark.
