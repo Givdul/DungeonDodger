@@ -82,7 +82,7 @@ GATE = T["gate"] + T["gate"][-2::-1]
 ATLAS_SIZE = (192, 208)
 ATLAS = {
     (0, 9): T["wall"][0],
-    (5, 9): mirror(T["wall"][1]),
+    (5, 9): mirror(T["wall"][0]),
     (7, 11): T["floor"][0],
     (8, 11): T["floor"][2],
     (8, 12): T["floor"][3],
