@@ -21,6 +21,6 @@ size on a transparent background, plus `dungeon_tileset.png`, the tile atlas lai
 `scripts/dungeon.gd` and `scenes/pit.tscn` read their tiles. It is deterministic: running it
 twice gives byte-identical files.
 
-The set's first exploration happened in `/tmp/lstack/DungeonDodger/pack/dark/`, outside the
-repo; those files are gone with the machine's temp dir. What survives is this folder: the
-drawings, the palette and the export.
+The set was explored outside the repo, in a temp folder a reboot clears. This folder is what is
+kept: the drawings, the palette and the export. `sets/sanctum_hero.py` draws a hero too; the game
+keeps o_lobster's hero, so the export leaves it out.
