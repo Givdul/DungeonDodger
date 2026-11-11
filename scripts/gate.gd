@@ -5,8 +5,8 @@ extends Spikes
 ## stands and sorts with the player and enemies instead of lying on the floor.
 
 # Frames of the strip where the bars stick up out of the gate's tile.
-const FIRST_TALL_FRAME := 3
-const LAST_TALL_FRAME := 11
+const FIRST_TALL_FRAME := 5
+const LAST_TALL_FRAME := 9
 const FLOOR_Z_INDEX := 1
 const STANDING_Z_INDEX := 5
 

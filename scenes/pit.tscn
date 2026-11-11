@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/pit.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://d6485avbiv5p" path="res://assets/sprites/Tiles_(animated)/Dungeon/broken_tile_fallingdown_anim_strip_9.png" id="2_tex"]
-[ext_resource type="Texture2D" uid="uid://brp1bq0eaupex" path="res://assets/sprites/Dungeon_Tileset.png" id="3_tileset"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sanctum/pit_crumble.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sanctum/dungeon_tileset.png" id="3_tileset"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pit0"]
 atlas = ExtResource("2_tex")
@@ -35,10 +35,6 @@ region = Rect2(96, 0, 16, 16)
 [sub_resource type="AtlasTexture" id="AtlasTexture_pit7"]
 atlas = ExtResource("2_tex")
 region = Rect2(112, 0, 16, 16)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_pit8"]
-atlas = ExtResource("2_tex")
-region = Rect2(128, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_wall"]
 atlas = ExtResource("3_tileset")
@@ -80,9 +76,6 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_pit7")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_pit8")
 }],
 "loop": false,
 "name": &"collapse",

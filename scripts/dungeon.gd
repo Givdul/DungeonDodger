@@ -48,7 +48,7 @@ const START_FLOOR: Array[String] = [
 	"......",
 	"......",
 ]
-const LINE_TILE := Vector2i(9, 12)
+const LINE_TILE := Vector2i(10, 12)
 const START_FLOOR_TILES := {".": FLOOR_TILE, "a": Vector2i(8, 11), "b": Vector2i(8, 12), "c": LINE_TILE}
 
 const PATH_TURN_CHANCE := 0.25
