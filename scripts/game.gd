@@ -27,6 +27,12 @@ var run_started := false
 static var _restarting := false
 
 var point_count := 0
+# What this run adds to Progress when it ends, in game seconds while playing.
+var run_stats := {"hits": 0, "holes": 0, "potions": 0, "chests": 0, "seconds": 0.0, "best_unhit_seconds": 0.0}
+var _unhit_seconds := 0.0
+var _lives: int
+# Off for the gameplay bot, whose runs leave the high score and saved progress alone.
+var saves_progress := true
 
 # Inset from the side walls (the Bounds bodies) that enemies and bats keep to.
 @export var padding_left := 6
@@ -68,6 +74,10 @@ func _ready():
 	high_score_var_label.text = str(ScoreManager.high_score)
 
 	dungeon.coin_picked_up.connect(_on_point_picked_up)
+	dungeon.chest_opened.connect(func(): run_stats.chests += 1)
+	_lives = player.current_lives
+	player.lives_changed.connect(_on_lives_changed)
+	player.fell_into_hole.connect(func(): run_stats.holes += 1)
 	player.died.connect(_on_player_died)
 	player.fell.connect(_on_player_fell)
 	player.key_changed.connect(held_key.set_visible)
@@ -93,6 +103,9 @@ func _physics_process(delta):
 		swipe_hint.visible = not run_started
 		if not run_started:
 			return
+	run_stats.seconds += delta
+	_unhit_seconds += delta
+	run_stats.best_unhit_seconds = maxf(run_stats.best_unhit_seconds, _unhit_seconds)
 	camera.position.y -= scroll_speed() * delta
 	dungeon.follow(screen_rect(), delta)
 	# The scroll edge and hazards leave a falling player alone until they are back on the floor.
@@ -144,12 +157,26 @@ func _keep_player_in_view() -> void:
 	player.position.y = maxf(player.position.y, band.position.y)
 
 
+# A heart lost is a hit, falls included; one gained is a potion drunk.
+func _on_lives_changed(lives: int) -> void:
+	if lives < _lives:
+		run_stats.hits += 1
+		_unhit_seconds = 0.0
+	elif lives > _lives:
+		run_stats.potions += 1
+	_lives = lives
+
+
 func _on_player_died():
 	var is_new_best := point_count > ScoreManager.high_score
-	if is_new_best:
-		ScoreManager.high_score = point_count
-		ScoreManager.save_high_score()
-	ui.show_game_over(point_count, ScoreManager.high_score, is_new_best)
+	var new_heroes: Array[String] = []
+	if saves_progress:
+		if is_new_best:
+			ScoreManager.high_score = point_count
+			ScoreManager.save_high_score()
+		run_stats.crystals = point_count
+		new_heroes = Progress.record_run(run_stats)
+	ui.show_game_over(point_count, ScoreManager.high_score, is_new_best, new_heroes)
 
 
 # Back on the safe path near the middle of the view, clear of the scroll edge.

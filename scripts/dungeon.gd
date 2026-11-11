@@ -11,6 +11,7 @@ extends TileMapLayer
 ## their hazards off those columns, so every hazard drawn can trigger.
 
 signal coin_picked_up
+signal chest_opened
 
 @export var coin_scene: PackedScene
 @export var spikes_scene: PackedScene
@@ -427,7 +428,9 @@ func _build_row(row: int) -> void:
 	if _key_found and _chest_seconds_left <= 0:
 		# Right beside the path, so the player can always reach it.
 		var beside_path := [path.front() - 1, path.back() + 1]
-		if _place_solid(chest_scene, row, _solid_columns(row, clear).filter(func(column): return column in beside_path)):
+		var chest := _place_solid(chest_scene, row, _solid_columns(row, clear).filter(func(column): return column in beside_path))
+		if chest:
+			chest.opened.connect(chest_opened.emit)
 			_chest_seconds_left = randf_range(CHEST_MIN_SECONDS, CHEST_MAX_SECONDS)
 	# Coins and keys would draw over the line's label. The coin countdown waits, so the coin due here lands after the line.
 	if on_line:

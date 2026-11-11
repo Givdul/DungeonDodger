@@ -4,6 +4,8 @@ signal lives_changed(lives)
 signal died
 # Emitted when a fall that cost a life has played, so the game can put the player back on the floor.
 signal fell
+# Emitted as the player starts falling into a hole, the last life's fall included.
+signal fell_into_hole
 signal key_changed(has_key: bool)
 
 @onready var anim = $AnimatedSprite2D
@@ -67,8 +69,14 @@ func _physics_process(delta):
 	move_and_slide()
 
 func _ready():
+	_wear(Progress.worn)
+	Progress.worn_changed.connect(_wear)
 	current_lives = max_lives
 	emit_signal("lives_changed", current_lives)
+
+func _wear(id: String) -> void:
+	anim.sprite_frames = Heroes.sprite_frames(id)
+	anim.play(&"idle")
 
 # Returns whether a heart was restored, so a pickup at full health can stay put.
 func heal() -> bool:
@@ -153,6 +161,7 @@ func _stop_invulnerability():
 func fall_into(hole_center: Vector2):
 	if is_dead or is_falling:
 		return
+	fell_into_hole.emit()
 	var feet := hole_center + Vector2(0, FALL_SPRITE_RISE)
 	create_tween().tween_property(self, "global_position", feet, FALL_SLIDE_SECONDS)
 	if current_lives <= 1:
