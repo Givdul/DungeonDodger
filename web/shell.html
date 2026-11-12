@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="apple-mobile-web-app-title" content="$GODOT_PROJECT_NAME">
+		<meta name="theme-color" content="#000000">
+		<!-- The demo is served at /dd, so the page URL has no trailing slash and relative
+		     URLs would otherwise resolve against /. -->
+		<base href="/dd/">
+		<title>$GODOT_PROJECT_NAME</title>
+		<style>
+@font-face {
+	font-family: 'PixelOperator';
+	src: url('pixel-operator-8-bold.ttf') format('truetype');
+	font-display: swap;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+	overscroll-behavior: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+	-webkit-text-size-adjust: 100%;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#start {
+	position: fixed;
+	inset: 0;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 24px;
+	padding: 24px;
+	background-color: #000;
+	text-align: center;
+	font-family: 'PixelOperator', monospace;
+	outline: none;
+}
+
+#start[data-mode='play'] {
+	cursor: pointer;
+}
+
+#start:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: -6px;
+}
+
+#start-icon {
+	width: min(36vw, 160px);
+	height: auto;
+	image-rendering: pixelated;
+}
+
+#start h1 {
+	margin: 0;
+	font-size: clamp(24px, 8vw, 48px);
+	font-weight: normal;
+	letter-spacing: 0.06em;
+	line-height: 1.1;
+	text-transform: uppercase;
+}
+
+#start-action {
+	margin: 0;
+	font-size: clamp(16px, 5vw, 22px);
+	letter-spacing: 0.1em;
+	color: #d0d0d0;
+}
+
+#desktop {
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+}
+
+#start[data-mode='desktop'] #start-action {
+	display: none;
+}
+
+#start[data-mode='desktop'] #desktop {
+	display: flex;
+}
+
+#desktop p {
+	margin: 0;
+	font-size: clamp(16px, 5vw, 22px);
+	letter-spacing: 0.06em;
+}
+
+#desktop .url {
+	color: #a0a0a0;
+	font-size: clamp(12px, 3.5vw, 15px);
+}
+
+#desktop img {
+	width: min(56vw, 220px);
+	height: auto;
+}
+
+#ios-hint {
+	margin: 0;
+	color: #a0a0a0;
+	font-size: clamp(12px, 3.8vw, 16px);
+	letter-spacing: 0.04em;
+	opacity: 0;
+	transition: opacity 0.5s ease;
+}
+
+#ios-hint.visible {
+	opacity: 1;
+}
+
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
+
+#status {
+	z-index: 2;
+	background-color: #000;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
+
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
+
+#status-splash.show-image--false {
+	display: none;
+}
+
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
+
+#status-progress, #status-notice {
+	display: none;
+}
+
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
+
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		$GODOT_HEAD_INCLUDE
+		<link rel="manifest" href="manifest.webmanifest">
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="start" data-mode="play" tabindex="0" role="button" aria-label="Tap to play">
+			<img id="start-icon" src="icon-512.png" alt="">
+			<h1>$GODOT_PROJECT_NAME</h1>
+			<p id="start-action">TAP TO PLAY</p>
+			<div id="desktop">
+				<p>OPEN THIS ON YOUR PHONE</p>
+				<img src="qr.svg" alt="QR code for https://apps.givdul.com/dd" width="232" height="232">
+				<p class="url">apps.givdul.com/dd</p>
+			</div>
+			<p id="ios-hint">For full screen, use Share &rarr; Add to Home Screen.</p>
+		</div>
+
+		<div id="status">
+			<img id="status-splash" class="$GODOT_SPLASH_CLASSES" src="$GODOT_SPLASH" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<script src="$GODOT_URL"></script>
+		<script>
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+	const startOverlay = document.getElementById('start');
+	const iosHint = document.getElementById('ios-hint');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	// The engine is shipped gzipped so no file on the static host is over the
+	// 25 MiB limit. Unpack it transparently for Godot's wasm loader.
+	const WASM_FILE = 'index.wasm';
+	const WASM_GZIP_FILE = 'index.wasm.gz';
+	const nativeFetch = window.fetch.bind(window);
+	window.fetch = function (input, init) {
+		const url = typeof input === 'string' ? input : input.url;
+		if (!url || (url !== WASM_FILE && !url.endsWith('/' + WASM_FILE))) {
+			return nativeFetch(input, init);
+		}
+		return nativeFetch(WASM_GZIP_FILE, init).then(function (response) {
+			if (!response.ok) {
+				throw new Error('Failed loading ' + WASM_GZIP_FILE + ' (' + response.status + ')');
+			}
+			if (!response.body || typeof DecompressionStream === 'undefined') {
+				throw new Error('This browser cannot unpack the game engine.');
+			}
+			const body = response.body.pipeThrough(new DecompressionStream('gzip'));
+			return new Response(body, { headers: { 'Content-Type': 'application/wasm' } });
+		});
+	};
+
+	const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+	const isStandalone = navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+	const isTouch = window.matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0;
+	const allowDesktop = new URLSearchParams(window.location.search).get('play') === '1';
+	const canPlay = isTouch || allowDesktop;
+
+	if (canPlay) {
+		// iPhone has no fullscreen for pages; the home screen entry does.
+		if (isIOS && !isStandalone) {
+			iosHint.classList.add('visible');
+			window.setTimeout(function () {
+				iosHint.classList.remove('visible');
+			}, 6000);
+		}
+	} else {
+		startOverlay.dataset.mode = 'desktop';
+		startOverlay.removeAttribute('tabindex');
+		startOverlay.removeAttribute('role');
+		startOverlay.removeAttribute('aria-label');
+	}
+
+	function lockPortrait() {
+		try {
+			if (screen.orientation && screen.orientation.lock) {
+				screen.orientation.lock('portrait').catch(function () {});
+			}
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
+	function enterFullscreen() {
+		const root = document.documentElement;
+		const request = root.requestFullscreen || root.webkitRequestFullscreen;
+		if (!request) {
+			return;
+		}
+		try {
+			const result = request.call(root, { navigationUI: 'hide' });
+			if (result && result.then) {
+				result.then(lockPortrait, function () {});
+			} else {
+				lockPortrait();
+			}
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
+	let started = false;
+
+	function play() {
+		if (!canPlay || started) {
+			return;
+		}
+		started = true;
+		startOverlay.remove();
+		setStatusMode('progress');
+		if (isTouch) {
+			enterFullscreen();
+		}
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(function () {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+
+	startOverlay.addEventListener('click', play);
+	startOverlay.addEventListener('keydown', function (event) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			play();
+		}
+	});
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		startOverlay.remove();
+		displayFailureNotice('Error\nThe following features required to run Godot projects on the Web are missing:\n' + missing.join('\n'));
+	}
+}());
+		</script>
+	</body>
+</html>
