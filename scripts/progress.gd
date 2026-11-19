@@ -56,12 +56,15 @@ func wear(id: String) -> void:
 
 ## Banks a finished run and returns the ids of the skins it unlocked. The run has crystals,
 ## hits, holes, potions and chests counts, and seconds and best_unhit_seconds in game time.
-func record_run(run: Dictionary) -> Array[String]:
-	wallet += run.crystals
-	stats.crystals += run.crystals
+## A continued run is banked at each death, with already_banked the run as its last death
+## banked it, so the totals count each crystal and hit once.
+func record_run(run: Dictionary, already_banked: Dictionary = {}) -> Array[String]:
+	var crystals: int = run.crystals - already_banked.get("crystals", 0)
+	wallet += crystals
+	stats.crystals += crystals
 	stats.deaths += 1
 	for count in ["hits", "holes", "potions", "chests"]:
-		stats[count] += run[count]
+		stats[count] += run[count] - already_banked.get(count, 0)
 	stats.best_run_crystals = maxi(stats.best_run_crystals, run.crystals)
 	stats.best_run_seconds = maxi(stats.best_run_seconds, floori(run.seconds))
 	stats.best_unhit_seconds = maxi(stats.best_unhit_seconds, floori(run.best_unhit_seconds))

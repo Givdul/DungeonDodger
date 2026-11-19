@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 signal restart_requested
+signal continue_requested
 
 enum State { START, CREDITS, HEROES, PLAYING, PAUSED, RESUMING, GAME_OVER }
 
@@ -49,6 +50,9 @@ static var _hint_index := randi() % HINTS.size()
 @onready var hud_area: Control = %HudArea
 @onready var pause_button: Button = %PauseButton
 @onready var mute_button: Button = %MuteButton
+@onready var privacy_button: Button = %PrivacyButton
+@onready var continue_button: Button = %ContinueButton
+@onready var restart_button: Button = %RestartButton
 @onready var dim: ColorRect = %Dim
 @onready var start_screen: Control = %StartScreen
 @onready var pause_screen: Control = %PauseScreen
@@ -65,13 +69,16 @@ func _ready() -> void:
 	_fit_to_screen()
 	%PlayButton.pressed.connect(start_playing)
 	%ResumeButton.pressed.connect(_start_countdown)
-	%RestartButton.pressed.connect(restart_requested.emit)
+	restart_button.pressed.connect(_on_restart_pressed)
+	continue_button.pressed.connect(_on_continue_pressed)
 	%CreditsButton.pressed.connect(_set_state.bind(State.CREDITS))
 	%BackButton.pressed.connect(_set_state.bind(State.START))
 	%HeroesButton.pressed.connect(_set_state.bind(State.HEROES))
 	heroes_screen.back_pressed.connect(_set_state.bind(State.START))
 	pause_button.pressed.connect(_set_state.bind(State.PAUSED))
 	mute_button.pressed.connect(Settings.toggle_mute)
+	privacy_button.pressed.connect(Ads.show_privacy_options)
+	Ads.privacy_options_changed.connect(_show_privacy_button)
 	Settings.muted_changed.connect(_show_muted)
 	_show_muted(Settings.muted)
 
@@ -105,6 +112,11 @@ func start_playing() -> void:
 	_set_state(State.PLAYING)
 
 
+## Counts the player back in after a continue, as after a pause.
+func resume_after_continue() -> void:
+	_start_countdown()
+
+
 # The tree stays paused throughout, and MobileInputs turns no swipes into move_*
 # actions while it is, so the player keeps their direction.
 func _start_countdown() -> void:
@@ -124,7 +136,8 @@ func speed_up_for_score(score: int) -> void:
 		Engine.time_scale = _playing_time_scale
 
 
-func show_game_over(score: int, high_score: int, is_new_best: bool, new_heroes: Array[String]) -> void:
+func show_game_over(score: int, high_score: int, is_new_best: bool, new_heroes: Array[String], can_continue: bool) -> void:
+	continue_button.visible = can_continue
 	%FinalScoreLabel.text = "SCORE %d" % score
 	%GameOverBestLabel.text = "BEST %d" % high_score
 	%NewBestLabel.visible = is_new_best
@@ -136,6 +149,18 @@ func show_game_over(score: int, high_score: int, is_new_best: bool, new_heroes: 
 	_set_state(State.GAME_OVER)
 
 
+# The button goes away at once, so the one continue can't be asked for twice.
+func _on_continue_pressed() -> void:
+	continue_button.visible = false
+	continue_requested.emit()
+
+
+# Restart can wait on an interstitial; a second tap must not restart twice.
+func _on_restart_pressed() -> void:
+	restart_button.disabled = true
+	restart_requested.emit()
+
+
 func _set_state(new_state: State) -> void:
 	if _countdown:
 		_countdown.kill()
@@ -145,6 +170,7 @@ func _set_state(new_state: State) -> void:
 	Engine.time_scale = _playing_time_scale if playing else 1.0
 	pause_button.visible = playing
 	mute_button.visible = state == State.START or state == State.PAUSED or state == State.GAME_OVER
+	_show_privacy_button()
 	dim.visible = not playing
 	start_screen.visible = state == State.START
 	pause_screen.visible = state == State.PAUSED
@@ -164,6 +190,11 @@ func _set_state(new_state: State) -> void:
 
 func _show_muted(muted: bool) -> void:
 	mute_button.text = "SOUND OFF" if muted else "SOUND ON"
+
+
+# Players in regions that need consent must be able to change it, from wherever the sound button is.
+func _show_privacy_button() -> void:
+	privacy_button.visible = mute_button.visible and Ads.has_privacy_options()
 
 
 # Godot's license asks for its notice and its third-party notices in the app.
