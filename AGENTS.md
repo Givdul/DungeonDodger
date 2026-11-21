@@ -18,6 +18,8 @@ The script exports the `Web` preset, gzips `index.wasm` (37.7 MiB, over Cloudfla
 
 From zones-web, `npm run build && npx wrangler dev` serves it at http://localhost:8787/dd. The page is at `/dd` without a trailing slash, so the shell sets `<base href="/dd/">`. On a desktop browser add `?play=1` (http://localhost:8787/dd?play=1) to skip the touch check.
 
+The site is the `Givdul/zones-web` repo, checked out at `~/Documents/development/zones-web`; follow its AGENTS.md there. Its `main` branch deploys to apps.givdul.com through Cloudflare Workers Builds, so publishing the demo means building from `master` into `public/dd/` on a zones-web branch, opening a zones-web PR, and merging it. When the user asks to land something "on the web version" too, do that after the game change is on `master`, then check that https://apps.givdul.com/dd?play=1 loads the new build.
+
 ## Pull requests
 
 Every PR that changes the game includes screenshots of the running game, one per screen or state the PR adds or changes.
