@@ -34,7 +34,7 @@ func _ready() -> void:
 	action_button.pressed.connect(_on_action_pressed)
 	select_marker.texture = select_icon
 	select_marker.mouse_filter = MOUSE_FILTER_IGNORE
-	select_marker.position = Vector2(CELL_SIZE.x - 15, -2)
+	select_marker.position = Vector2(-1, -2)
 	grid.columns = COLUMNS
 	for id in Heroes.ids():
 		_cells[id] = _make_cell(id)
