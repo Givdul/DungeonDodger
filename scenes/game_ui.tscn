@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c3eh24ehywxt6" path="res://scripts/game_ui.gd" id="1_ui"]
 [ext_resource type="FontFile" uid="uid://cfgitiypbcwvg" path="res://assets/fonts/PixelOperator8-Bold.ttf" id="2_font"]
-[ext_resource type="Texture2D" uid="uid://djn8o1nxjx338" path="res://assets/sprites/Hud_Ui/item_box_hud.png" id="3_box"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sanctum/item_box.png" id="3_box"]
 [ext_resource type="FontFile" uid="uid://b7nt4w45fifes" path="res://assets/fonts/PixelOperator8.ttf" id="4_regular"]
 [ext_resource type="Script" path="res://scripts/heroes_screen.gd" id="5_heroes"]
 [ext_resource type="Texture2D" uid="uid://cq013wfu5i3rx" path="res://assets/sprites/Props_Items_(animated)/crystal_item_anim_strip_6.png" id="6_crystal"]
@@ -59,12 +59,12 @@ bg_color = Color(0.921569, 0.623529, 0.498039, 1)
 [sub_resource type="Theme" id="Theme_ui"]
 default_font = ExtResource("2_font")
 default_font_size = 8
-Button/colors/font_color = Color(0.2, 0.2, 0.2, 1)
-Button/colors/font_disabled_color = Color(0.2, 0.2, 0.2, 1)
-Button/colors/font_focus_color = Color(0.2, 0.2, 0.2, 1)
-Button/colors/font_hover_color = Color(0.2, 0.2, 0.2, 1)
-Button/colors/font_hover_pressed_color = Color(0.2, 0.2, 0.2, 1)
-Button/colors/font_pressed_color = Color(0.2, 0.2, 0.2, 1)
+Button/colors/font_color = Color(0.741176, 0.690196, 0.603922, 1)
+Button/colors/font_disabled_color = Color(0.552941, 0.509804, 0.447059, 1)
+Button/colors/font_focus_color = Color(0.741176, 0.690196, 0.603922, 1)
+Button/colors/font_hover_color = Color(0.741176, 0.690196, 0.603922, 1)
+Button/colors/font_hover_pressed_color = Color(0.741176, 0.690196, 0.603922, 1)
+Button/colors/font_pressed_color = Color(0.741176, 0.690196, 0.603922, 1)
 Button/styles/disabled = SubResource("StyleBoxTexture_disabled")
 Button/styles/focus = SubResource("StyleBoxEmpty_focus")
 Button/styles/hover = SubResource("StyleBoxTexture_normal")

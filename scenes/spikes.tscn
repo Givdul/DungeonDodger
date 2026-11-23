@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/spikes.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://c5jnnne4lk7m2" path="res://assets/sprites/Tiles_(animated)/Dungeon/spikes_tile_trap_anim_strip_12.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sanctum/spikes.png" id="2_tex"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_spikes0"]
 atlas = ExtResource("2_tex")
@@ -35,60 +35,32 @@ region = Rect2(96, 0, 16, 16)
 atlas = ExtResource("2_tex")
 region = Rect2(112, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_spikes8"]
-atlas = ExtResource("2_tex")
-region = Rect2(128, 0, 16, 16)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_spikes9"]
-atlas = ExtResource("2_tex")
-region = Rect2(144, 0, 16, 16)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_spikes10"]
-atlas = ExtResource("2_tex")
-region = Rect2(160, 0, 16, 16)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_spikes11"]
-atlas = ExtResource("2_tex")
-region = Rect2(176, 0, 16, 16)
-
 [sub_resource type="SpriteFrames" id="SpriteFrames_spikes"]
 animations = [{
 "frames": [{
-"duration": 21.0,
+"duration": 20.0,
 "texture": SubResource("AtlasTexture_spikes0")
 }, {
-"duration": 1.0,
+"duration": 3.0,
 "texture": SubResource("AtlasTexture_spikes1")
 }, {
-"duration": 1.0,
+"duration": 7.0,
 "texture": SubResource("AtlasTexture_spikes2")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_spikes3")
 }, {
-"duration": 3.0,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_spikes4")
 }, {
-"duration": 3.0,
+"duration": 2.0,
 "texture": SubResource("AtlasTexture_spikes5")
 }, {
-"duration": 2.0,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_spikes6")
 }, {
-"duration": 1.0,
+"duration": 2.0,
 "texture": SubResource("AtlasTexture_spikes7")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_spikes8")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_spikes9")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_spikes10")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_spikes11")
 }],
 "loop": true,
 "name": &"default",
@@ -106,6 +78,8 @@ z_index = 1
 sprite_frames = SubResource("SpriteFrames_spikes")
 animation = &"default"
 script = ExtResource("1_script")
+first_up_frame = 3
+last_up_frame = 5
 
 [node name="Solid" type="StaticBody2D" parent="."]
 

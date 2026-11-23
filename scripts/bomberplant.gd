@@ -8,7 +8,7 @@ extends StaticBody2D
 @export var reload_delay := 1.0
 
 # Frame of the attack animation where the bomb leaves the plant.
-const LAUNCH_FRAME := 7
+const LAUNCH_FRAME := 3
 const MOUTH_OFFSET := Vector2(0, -12)
 
 @onready var player = get_tree().get_first_node_in_group("Player")

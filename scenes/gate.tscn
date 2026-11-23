@@ -1,120 +1,115 @@
-[gd_scene format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/gate.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/sprites/Tiles_(animated)/Dungeon/iron_gate_closing_anim_strip_8.png" id="2_closing"]
-[ext_resource type="Texture2D" path="res://assets/sprites/Tiles_(animated)/Dungeon/iron_gate_opening_anim_strip_8.png" id="3_opening"]
+[ext_resource type="Texture2D" path="res://assets/sprites/sanctum/gate.png" id="2_closing"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_closing0"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate0"]
 atlas = ExtResource("2_closing")
 region = Rect2(0, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_closing1"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate1"]
 atlas = ExtResource("2_closing")
 region = Rect2(16, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_closing2"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate2"]
 atlas = ExtResource("2_closing")
 region = Rect2(32, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_closing3"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate3"]
 atlas = ExtResource("2_closing")
 region = Rect2(48, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_closing4"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate4"]
 atlas = ExtResource("2_closing")
 region = Rect2(64, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_closing5"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate5"]
 atlas = ExtResource("2_closing")
 region = Rect2(80, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_closing6"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate6"]
 atlas = ExtResource("2_closing")
 region = Rect2(96, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_closing7"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate7"]
 atlas = ExtResource("2_closing")
 region = Rect2(112, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_opening0"]
-atlas = ExtResource("3_opening")
-region = Rect2(0, 0, 16, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate8"]
+atlas = ExtResource("2_closing")
+region = Rect2(128, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_opening1"]
-atlas = ExtResource("3_opening")
-region = Rect2(16, 0, 16, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate9"]
+atlas = ExtResource("2_closing")
+region = Rect2(144, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_opening2"]
-atlas = ExtResource("3_opening")
-region = Rect2(32, 0, 16, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate10"]
+atlas = ExtResource("2_closing")
+region = Rect2(160, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_opening3"]
-atlas = ExtResource("3_opening")
-region = Rect2(48, 0, 16, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate11"]
+atlas = ExtResource("2_closing")
+region = Rect2(176, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_opening4"]
-atlas = ExtResource("3_opening")
-region = Rect2(64, 0, 16, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate12"]
+atlas = ExtResource("2_closing")
+region = Rect2(192, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_opening5"]
-atlas = ExtResource("3_opening")
-region = Rect2(80, 0, 16, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate13"]
+atlas = ExtResource("2_closing")
+region = Rect2(208, 0, 16, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_opening6"]
-atlas = ExtResource("3_opening")
-region = Rect2(96, 0, 16, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_opening7"]
-atlas = ExtResource("3_opening")
-region = Rect2(112, 0, 16, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_gate14"]
+atlas = ExtResource("2_closing")
+region = Rect2(224, 0, 16, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_gate"]
 animations = [{
 "frames": [{
 "duration": 18.0,
-"texture": SubResource("AtlasTexture_closing0")
+"texture": SubResource("AtlasTexture_gate0")
 }, {
 "duration": 2.0,
-"texture": SubResource("AtlasTexture_closing1")
+"texture": SubResource("AtlasTexture_gate1")
 }, {
 "duration": 2.0,
-"texture": SubResource("AtlasTexture_closing2")
+"texture": SubResource("AtlasTexture_gate2")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_closing3")
+"texture": SubResource("AtlasTexture_gate3")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_closing4")
+"texture": SubResource("AtlasTexture_gate4")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_closing5")
+"texture": SubResource("AtlasTexture_gate5")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_closing6")
+"texture": SubResource("AtlasTexture_gate6")
 }, {
 "duration": 6.0,
-"texture": SubResource("AtlasTexture_closing7")
+"texture": SubResource("AtlasTexture_gate7")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_opening1")
+"texture": SubResource("AtlasTexture_gate8")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_opening2")
+"texture": SubResource("AtlasTexture_gate9")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_opening3")
+"texture": SubResource("AtlasTexture_gate10")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_opening4")
+"texture": SubResource("AtlasTexture_gate11")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_opening5")
+"texture": SubResource("AtlasTexture_gate12")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_opening6")
+"texture": SubResource("AtlasTexture_gate13")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_opening7")
+"texture": SubResource("AtlasTexture_gate14")
 }],
 "loop": true,
 "name": &"default",

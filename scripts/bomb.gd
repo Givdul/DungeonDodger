@@ -39,6 +39,7 @@ func launch(from: Vector2, target: Vector2) -> void:
 
 func _land() -> void:
 	bomb.z_index = LANDED_Z_INDEX
+	bomb.play(&"landed")
 	# The sound lasts as long as fuse_time, and audio ignores the time scale.
 	$FuseSound.pitch_scale = Engine.time_scale
 	$FuseSound.play()
