@@ -280,6 +280,7 @@ text = "BEST 0"
 horizontal_alignment = 1
 
 [node name="TapLabel" type="Label" parent="Root/HudArea/StartScreen/Content" unique_id=599503598]
+unique_name_in_owner = true
 layout_mode = 2
 text = "TAP TO PLAY"
 horizontal_alignment = 1

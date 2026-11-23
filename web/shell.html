@@ -118,6 +118,32 @@ body {
 	font-size: clamp(12px, 3.5vw, 15px);
 }
 
+#play-pc {
+	margin-top: 8px;
+	padding: 10px 22px;
+	font-family: inherit;
+	font-size: clamp(16px, 5vw, 22px);
+	letter-spacing: 0.1em;
+	color: #fff;
+	background: none;
+	border: 2px solid #fff;
+	border-radius: 0;
+	cursor: pointer;
+}
+
+#play-pc:hover, #play-pc:focus-visible {
+	color: #000;
+	background: #fff;
+	outline: none;
+}
+
+#desktop .key-hint {
+	margin: 0;
+	color: #a0a0a0;
+	font-size: clamp(12px, 3.5vw, 15px);
+	letter-spacing: 0.08em;
+}
+
 #desktop img {
 	width: min(56vw, 220px);
 	height: auto;
@@ -221,6 +247,8 @@ body {
 				<p>OPEN THIS ON YOUR PHONE</p>
 				<img src="qr.svg" alt="QR code for https://apps.givdul.com/dd" width="232" height="232">
 				<p class="url">apps.givdul.com/dd</p>
+				<button id="play-pc" type="button">PLAY ON PC</button>
+				<p class="key-hint">WASD OR ARROWS</p>
 			</div>
 			<p id="ios-hint">For full screen, use Share &rarr; Add to Home Screen.</p>
 		</div>
@@ -242,7 +270,10 @@ const engine = new Engine(GODOT_CONFIG);
 	const statusProgress = document.getElementById('status-progress');
 	const statusNotice = document.getElementById('status-notice');
 	const startOverlay = document.getElementById('start');
+	const startAction = document.getElementById('start-action');
+	const playPcButton = document.getElementById('play-pc');
 	const iosHint = document.getElementById('ios-hint');
+	const canvas = document.getElementById('canvas');
 
 	let initializing = true;
 	let statusMode = '';
@@ -312,9 +343,13 @@ const engine = new Engine(GODOT_CONFIG);
 	const isStandalone = navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 	const isTouch = window.matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0;
 	const allowDesktop = new URLSearchParams(window.location.search).get('play') === '1';
-	const canPlay = isTouch || allowDesktop;
+	let canPlay = isTouch || allowDesktop;
 
 	if (canPlay) {
+		if (!isTouch) {
+			startAction.textContent = 'CLICK TO PLAY';
+			startOverlay.setAttribute('aria-label', 'Click to play');
+		}
 		// iPhone has no fullscreen for pages; the home screen entry does.
 		if (isIOS && !isStandalone) {
 			iosHint.classList.add('visible');
@@ -357,6 +392,14 @@ const engine = new Engine(GODOT_CONFIG);
 		}
 	}
 
+	// Godot listens for keydown and keyup on the canvas, so a canvas that lost focus
+	// silently drops keyboard input. Take it back when a movement key is pressed.
+	const MOVE_KEYS = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+
+	function focusCanvas() {
+		canvas.focus({ preventScroll: true });
+	}
+
 	let started = false;
 
 	function play() {
@@ -381,11 +424,28 @@ const engine = new Engine(GODOT_CONFIG);
 			},
 		}).then(function () {
 			setStatusMode('hidden');
+			focusCanvas();
 		}, displayFailureNotice);
 	}
 
 	startOverlay.addEventListener('click', play);
+	playPcButton.addEventListener('click', function () {
+		canPlay = true;
+		play();
+	});
+	window.addEventListener('keydown', function (event) {
+		if (!started || document.activeElement === canvas || !MOVE_KEYS.includes(event.code)) {
+			return;
+		}
+		if (event.code.startsWith('Arrow')) {
+			event.preventDefault();
+		}
+		focusCanvas();
+	});
 	startOverlay.addEventListener('keydown', function (event) {
+		if (event.target !== startOverlay) {
+			return;
+		}
 		if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault();
 			play();

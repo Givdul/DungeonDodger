@@ -66,6 +66,8 @@ func _ready():
 	process_physics_priority = 1
 	camera.position = Vector2(0, player.position.y)
 	_place_hud()
+	if not DisplayServer.is_touchscreen_available():
+		swipe_hint.text = "WASD / ARROWS"
 	dungeon.start(screen_rect())
 
 	if debug:
