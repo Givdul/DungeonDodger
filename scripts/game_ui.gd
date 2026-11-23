@@ -63,6 +63,8 @@ static var _hint_index := randi() % HINTS.size()
 func _ready() -> void:
 	get_viewport().size_changed.connect(_fit_to_screen)
 	_fit_to_screen()
+	if not DisplayServer.is_touchscreen_available():
+		%TapLabel.text = "CLICK TO PLAY"
 	%PlayButton.pressed.connect(start_playing)
 	%ResumeButton.pressed.connect(_start_countdown)
 	%RestartButton.pressed.connect(restart_requested.emit)
