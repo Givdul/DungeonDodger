@@ -6,8 +6,9 @@ signal continue_requested
 enum State { START, CREDITS, HEROES, PLAYING, PAUSED, RESUMING, GAME_OVER }
 
 const ASSET_CREDITS := """ART
-TOP-DOWN Adventure Pack by o_lobster
+Based on TOP-DOWN Adventure Pack by o_lobster
 o-lobster.itch.io
+Modified and extended for Dungeon Dodger
 License: CC BY 4.0
 creativecommons.org/licenses/by/4.0
 The hero skins are modified from o_lobster's pack
