@@ -5,6 +5,21 @@
 - Test without sound. Before `project_run`, check that `~/Library/Application Support/Godot/app_userdata/Dungeon Dodger/settings.cfg` has `muted=true` under `[audio]`. Every worktree shares that file, and the game reads it at startup. The mute button saves to it too, so if a test presses that button, leave it muted. Headless runs make no sound.
 - Call `project_manage` with `op: "stop"` before closing the editor or ending the task. A running game outlives its editor and keeps playing.
 
+## Web demo
+
+`https://apps.givdul.com/dd` is the Web export, assembled by `tools/build_web_demo.sh <destination>`:
+
+```sh
+godot --headless --path . --import   # once per fresh checkout
+tools/build_web_demo.sh ../zones-web/public/dd
+```
+
+The script exports the `Web` preset, gzips `index.wasm` (37.7 MiB, over Cloudflare's 25 MiB per-file limit), copies the assets from `web/`, and fails if any output file is too large. `web/shell.html` is the custom shell: the tap-to-play start screen, the desktop QR gate with its `PLAY ON PC` button, Android fullscreen and portrait lock, and the loader that unpacks the gzipped engine. Phones swipe to move; on a desktop keyboard, WASD and the arrow keys move the same way.
+
+From zones-web, `npm run build && npx wrangler dev` serves it at http://localhost:8787/dd. The page is at `/dd` without a trailing slash, so the shell sets `<base href="/dd/">`. On a desktop browser, press `PLAY ON PC` on the QR gate, or add `?play=1` (http://localhost:8787/dd?play=1) to skip the gate; either way the start screen says `CLICK TO PLAY`.
+
+The site is the `Givdul/zones-web` repo, checked out at `~/Documents/development/zones-web`; follow its AGENTS.md there. Its `main` branch deploys to apps.givdul.com through Cloudflare Workers Builds, so publishing the demo means building from `master` into `public/dd/` on a zones-web branch, opening a zones-web PR, and merging it. When the user asks to land something "on the web version" too, do that after the game change is on `master`, then check that https://apps.givdul.com/dd?play=1 loads the new build.
+
 ## Pull requests
 
 Every PR that changes the game includes screenshots of the running game, one per screen or state the PR adds or changes.
